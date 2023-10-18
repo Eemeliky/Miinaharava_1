@@ -73,23 +73,73 @@ def alusta_peli():
     peli_data["tyhjat"] = tyhjat_ruudut
 
 
-def miinoita(aloitus_x, aloitus_y):
+def luo_turva_alue(aloitus_x, aloitus_y):
+    """
+    Luo 3x3 turva-alueen aloitus kohdan ympärille, jos miinojen lkm. sallii sen
+    :param aloitus_x: Pelin aloitus ruudun x koordinaatti
+    :param aloitus_y: Pelin aloitus ruudun y koordinaatti
+    :return: Listan, joka sisältää koordinaatti parit aloitus ruudun ympärillä olevista ruuduista
+    """
+    peli_data["tyhjat"].remove((aloitus_x, aloitus_y))
+    turva_alue = []
+    for k_pari in peli_data["tyhjat"]:
+        x, y = k_pari
+
+        # vas ylä
+        if x == aloitus_x - 1 and y == aloitus_y - 1:
+            turva_alue.append((x, y))
+
+        # ylös
+        elif x == aloitus_x and y == aloitus_y - 1:
+            turva_alue.append((x, y))
+
+        # oikea ylä
+        elif x == aloitus_x + 1 and y == aloitus_y - 1:
+            turva_alue.append((x, y))
+
+        # vas
+        elif x == aloitus_x - 1 and y == aloitus_y:
+            turva_alue.append((x, y))
+
+        # oikea
+        elif x == aloitus_x + 1 and y == aloitus_y:
+            turva_alue.append((x, y))
+
+        # vasen ala
+        elif x == aloitus_x - 1 and y == aloitus_y + 1:
+            turva_alue.append((x, y))
+
+        # alas
+        elif x == aloitus_x and y == aloitus_y + 1:
+            turva_alue.append((x, y))
+
+        # oikea ala
+        elif x == aloitus_x + 1 and y == aloitus_y + 1:
+            turva_alue.append((x, y))
+
+    for ruutu in turva_alue:
+        peli_data["tyhjat"].remove(ruutu)
+
+    return turva_alue
+
+
+def miinoita(turva_alue):
     """
     Asettaa kentälle N kpl miinoja satunnaisiin paikkoihin.
+    :param turva_alue:
     """
-    extra = []
-    for i in range(0, len(peli_data["tyhjat"]) - 1):
-        x, y = peli_data["tyhjat"][i]
-        if x == aloitus_x and y == aloitus_y:
-            peli_data["tyhjat"].pop(i)
-        elif x == aloitus_x - 1 and y == aloitus_y:
-            extra.append((x, y))
-            peli_data["tyhjat"].pop(i)
 
-    for _ in range(MIINAT):
+    luku = 0
+    while luku < MIINAT:
+        if not peli_data["tyhjat"]:
+            break
         idx = random.randint(0, len(peli_data["tyhjat"]) - 1)
         x, y = peli_data["tyhjat"].pop(idx)
         peli_data["kentta"][y][x] = -1
+        luku += 1
+
+
+    peli_data["tyhjat"] = []
 
 
 def piirra_kentta():
@@ -195,6 +245,10 @@ def voitto_tarkistus():
             if ruutu == 0 or ruutu == 9:
                 avaamattomat += 1
     if avaamattomat == MIINAT:
+        for y, rivi in enumerate(peli_data["kansi"]):
+            for x, ruutu in enumerate(rivi):
+                if ruutu == 0:
+                    peli_data["kansi"][y][x] = 9
         peli_data["voitto"] = (0, 0)
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä lopettaaksesi pelin")
@@ -224,8 +278,10 @@ def kasittele_hiiri(x, y, tapahtuma, _):
                     nayta_miinat()
                 else:
                     if peli_data["tyhjat"]:
-                        miinoita(ruutu_x, ruutu_y)
+                        turva_alue = luo_turva_alue(ruutu_x, ruutu_y)
+                        miinoita(turva_alue)
                         numeroi()
+                        tulvataytto(ruutu_x, ruutu_y)
                     else:
                         tulvataytto(ruutu_x, ruutu_y)
 
@@ -238,18 +294,24 @@ def kasittele_hiiri(x, y, tapahtuma, _):
                 peli_data["kansi"][ruutu_y][ruutu_x] = 0
 
 
+def parametrien_syotto():
+    if MIINAT > KENTTA_KORKEUS * KENTTA_LEVEYS - 1:
+        print("ERROR! KENTÄLLÄ ON OLTAVA VÄHITÄÄN YKSI TYHJÄ RUUTU")
+        return False
+    return True
+
+
 def main():
     """
     Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
     """
-
-    alusta_peli()
-    haravasto.lataa_kuvat("spritet")
-    haravasto.luo_ikkuna(IKKUNAN_LEVEYS, IKKUNAN_KORKEUS)
-    haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
-    haravasto.aseta_piirto_kasittelija(piirra_kentta)
-
-    haravasto.aloita()
+    if parametrien_syotto():
+        alusta_peli()
+        haravasto.lataa_kuvat("spritet")
+        haravasto.luo_ikkuna(IKKUNAN_LEVEYS, IKKUNAN_KORKEUS)
+        haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
+        haravasto.aseta_piirto_kasittelija(piirra_kentta)
+        haravasto.aloita()
 
 
 if __name__ == '__main__':
