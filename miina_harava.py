@@ -4,15 +4,17 @@ import haravasto
 peli_data = {
     "kentta": [],
     "kansi": [],
+    "miinat": 0,
+    "kentan_leveys": 9,
+    "kentan_korkeus": 9
 }
 
 
-MIINAT = 10
 KENTTA_LEVEYS = 9
 KENTTA_KORKEUS = 9
 SPRITE_SIVU = 40  # muuta jos käytät eri kokoisia spritejä (vakio 40x40px).
-IKKUNAN_LEVEYS = SPRITE_SIVU * KENTTA_LEVEYS
-IKKUNAN_KORKEUS = SPRITE_SIVU * KENTTA_KORKEUS
+IKKUNAN_LEVEYS = SPRITE_SIVU * peli_data["kentan_leveys"]
+IKKUNAN_KORKEUS = SPRITE_SIVU * peli_data["kentan_korkeus"]
 
 
 def numeroi():
@@ -130,7 +132,7 @@ def miinoita(turva_alue):
     """
 
     luku = 0
-    while luku < MIINAT:
+    while luku < peli_data["miinat"]:
         if not peli_data["tyhjat"]:
             x, y = turva_alue.pop()
             peli_data["kentta"][y][x] = -1
@@ -245,7 +247,7 @@ def voitto_tarkistus():
         for x, ruutu in enumerate(rivi):
             if ruutu == 0 or ruutu == 9:
                 avaamattomat += 1
-    if avaamattomat == MIINAT:
+    if avaamattomat == peli_data["miinat"]:
         for y, rivi in enumerate(peli_data["kansi"]):
             for x, ruutu in enumerate(rivi):
                 if ruutu == 0:
@@ -296,23 +298,34 @@ def kasittele_hiiri(x, y, tapahtuma, _):
 
 
 def parametrien_syotto():
-    if MIINAT > KENTTA_KORKEUS * KENTTA_LEVEYS - 1:
-        print("ERROR! KENTÄLLÄ ON OLTAVA VÄHITÄÄN YKSI TYHJÄ RUUTU")
-        return False
-    return True
+    peli_data["miinat"] = peli_data["kentan_leveys"] * peli_data["kentan_korkeus"]
+    valid = False
+    while not valid:
+        try:
+            peli_data["miinat"] = int(input("Anna miinojen määrä: "))
+            if peli_data["kentan_leveys"] * peli_data["kentan_korkeus"] > peli_data["miinat"] >= 0:
+                valid = True
+            else:
+                print("Kentällä on oltava vähitään 1 tyhjä ruutu!")
+                print("sallittu miinojen määrä (0 - {a})"
+                      .format(a=peli_data["kentan_leveys"] * peli_data["kentan_korkeus"] - 1))
+        except ValueError:
+            print("Miinojen määrä on olta kokonaisluku!")
+
+
 
 
 def main():
     """
     Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
     """
-    if parametrien_syotto():
-        alusta_peli()
-        haravasto.lataa_kuvat("spritet")
-        haravasto.luo_ikkuna(IKKUNAN_LEVEYS, IKKUNAN_KORKEUS)
-        haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
-        haravasto.aseta_piirto_kasittelija(piirra_kentta)
-        haravasto.aloita()
+    parametrien_syotto()
+    alusta_peli()
+    haravasto.lataa_kuvat("spritet")
+    haravasto.luo_ikkuna(IKKUNAN_LEVEYS, IKKUNAN_KORKEUS)
+    haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
+    haravasto.aseta_piirto_kasittelija(piirra_kentta)
+    haravasto.aloita()
 
 
 if __name__ == '__main__':
