@@ -7,9 +7,9 @@ peli_data = {
 }
 
 
-MIINAT = 3
-KENTTA_LEVEYS = 15
-KENTTA_KORKEUS = 10
+MIINAT = 10
+KENTTA_LEVEYS = 9
+KENTTA_KORKEUS = 9
 SPRITE_SIVU = 40  # muuta jos käytät eri kokoisia spritejä (vakio 40x40px).
 IKKUNAN_LEVEYS = SPRITE_SIVU * KENTTA_LEVEYS
 IKKUNAN_KORKEUS = SPRITE_SIVU * KENTTA_KORKEUS
@@ -132,12 +132,13 @@ def miinoita(turva_alue):
     luku = 0
     while luku < MIINAT:
         if not peli_data["tyhjat"]:
-            break
-        idx = random.randint(0, len(peli_data["tyhjat"]) - 1)
-        x, y = peli_data["tyhjat"].pop(idx)
-        peli_data["kentta"][y][x] = -1
+            x, y = turva_alue.pop()
+            peli_data["kentta"][y][x] = -1
+        else:
+            idx = random.randint(0, len(peli_data["tyhjat"]) - 1)
+            x, y = peli_data["tyhjat"].pop(idx)
+            peli_data["kentta"][y][x] = -1
         luku += 1
-
 
     peli_data["tyhjat"] = []
 
