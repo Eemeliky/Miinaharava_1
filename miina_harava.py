@@ -6,8 +6,11 @@ pelidata = {
     "kansi": [],
     "miinat": 0,
     "kentan_leveys": 0,
-    "kentan_korkeus": 0
+    "kentan_korkeus": 0,
+    "ikkunan_leveys": 0,
+    "ikkunan_korkeus": 0
 }
+
 # Vaikeus tasot: [leveys, korkeus, miinojen määrä]
 HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
@@ -158,26 +161,26 @@ def piirra_kentta():
             if pelidata['kansi'][y][x] == 9:
                 haravasto.lisaa_piirrettava_ruutu('f',
                                                   x * SPRITE_SIVU,
-                                                  pelidata["kentan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                  pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
             elif pelidata['kansi'][y][x] == 1:
                 if asia == -1:
                     haravasto.lisaa_piirrettava_ruutu('x',
                                                       x * SPRITE_SIVU,
-                                                      pelidata["kentan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                      pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
                 else:
                     haravasto.lisaa_piirrettava_ruutu(str(asia),
                                                       x * 40,
-                                                      pelidata["kentan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                      pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
             else:
                 haravasto.lisaa_piirrettava_ruutu(" ",
                                                   x * 40,
-                                                  pelidata["kentan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                  pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
 
     if "game_over" in pelidata:
         if "xr" in haravasto.grafiikka["kuvat"]:
             haravasto.lisaa_piirrettava_ruutu('xr',
                                               pelidata["game_over"][0] * SPRITE_SIVU,
-                                              pelidata["kentan_korkeus"] - (SPRITE_SIVU * (pelidata["game_over"][1]+1)))
+                                              pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (pelidata["game_over"][1]+1)))
     haravasto.piirra_ruudut()
 
 
@@ -300,6 +303,8 @@ def aseta_vaikeustaso(vaikeustaso):
     pelidata["kentan_leveys"] = vaikeustaso[0]
     pelidata["kentan_korkeus"] = vaikeustaso[1]
     pelidata["miinat"] = vaikeustaso[2]
+    pelidata["ikkunan_leveys"] = pelidata["kentan_leveys"] * SPRITE_SIVU
+    pelidata["ikkunan_korkeus"] = pelidata["kentan_korkeus"] * SPRITE_SIVU
 
 
 def luo_mukautettu_peli():
