@@ -1,3 +1,12 @@
+"""
+Miinaharava - yksinkertainen miinaharava peli.
+
+@author: Eemeli Kyröläinen, Oulun yliopisto
+
+Peli toimii valmiiksi annetun haravasto kirjaston avulla. Pelissä on kolme vaikeustaso (helppo, normaali, vaikea).
+Lisäksi voit luoda oman mukautetun pelin halutuilla dimensioilla ja miinojen määrällä. Peli tallentaa [IMPLEMENT SAVES]
+"""
+
 import random
 import haravasto
 
@@ -180,7 +189,8 @@ def piirra_kentta():
         if "xr" in haravasto.grafiikka["kuvat"]:
             haravasto.lisaa_piirrettava_ruutu('xr',
                                               pelidata["game_over"][0] * SPRITE_SIVU,
-                                              pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (pelidata["game_over"][1]+1)))
+                                              pelidata["ikkunan_korkeus"] -
+                                              (SPRITE_SIVU * (pelidata["game_over"][1] + 1)))
     haravasto.piirra_ruudut()
 
 
@@ -307,41 +317,34 @@ def aseta_vaikeustaso(vaikeustaso):
     pelidata["ikkunan_korkeus"] = pelidata["kentan_korkeus"] * SPRITE_SIVU
 
 
+def tarkista_syote(teksti, rajat):
+    """
+    Tarkistaa että käyttäjän antama syote on kelvollinen (kokonaisluku)
+    :param teksti: kysytyn syötteen nimi/teksti
+    :param rajat: kokonaisluku pari (min, max)
+    :return: Palauttaa kelvollisen syötteen (kokoinaisluku)
+    """
+    while True:
+        try:
+            syote = int(input(f"Anna pelikentän {teksti}: "))
+            if rajat[1] > syote > rajat[0]:
+                break
+            else:
+                print(f"On oltava välillä ({rajat[0]} - {rajat[1]})")
+        except ValueError:
+            print("Täytyy olla kokonaisluku!")
+
+    return syote
+
+
 def luo_mukautettu_peli():
-    while True:
-        try:
-            pelidata["kentan_leveys"] = int(input("Anna pelikentän leveys(max 100): "))
-        except ValueError:
-            print("Leveys täytyy olla kokonaisluku!")
-
-        if 101 > pelidata["kentan_leveys"] > 0:
-            break
-        else:
-            print("Leveys on oltava välillä (0 - 100)")
-
-    while True:
-        try:
-            pelidata["kentan_korkeus"] = int(input("Anna pelikentän korkeus(max 100): "))
-        except ValueError:
-            print("Korkeus täytyy olla kokonaisluku!")
-
-        if 101 > pelidata["kentan_korkeus"] > 0:
-            break
-        else:
-            print("Korkeus on oltava välillä (0 - 100)")
-
-    while True:
-        try:
-            pelidata["miinat"] = int(input("Anna miinojen määrä: "))
-        except ValueError:
-            print("Miinojen määrä on olta kokonaisluku!")
-
-        if pelidata["kentan_leveys"] * pelidata["kentan_korkeus"] > pelidata["miinat"] >= 0:
-            break
-        else:
-            print("Kentällä on oltava vähitään 1 tyhjä ruutu!")
-            print("sallittu miinojen määrä (0 - {a})"
-                  .format(a=pelidata["kentan_leveys"] * pelidata["kentan_korkeus"] - 1))
+    mukautettu = []
+    leveys = tarkista_syote("leveys", (1, 101))
+    korkeus = tarkista_syote("korkeus", (1, 101))
+    mukautettu.append(leveys)
+    mukautettu.append(korkeus)
+    mukautettu.append(tarkista_syote("miinojen määrä", (0, leveys*korkeus)))
+    aseta_vaikeustaso(mukautettu)
 
 
 def parametrien_syotto():
@@ -371,7 +374,7 @@ def parametrien_syotto():
 
 def main():
     """
-    Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
+    Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
     """
     parametrien_syotto()
     luo_kentta()
