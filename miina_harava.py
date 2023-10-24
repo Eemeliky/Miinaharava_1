@@ -9,15 +9,23 @@ Lisäksi voit luoda oman mukautetun pelin halutuilla dimensioilla ja miinojen m�
 
 import random
 import haravasto
+import time
+from datetime import datetime
 
 pelidata = {
     "kentta": [],
     "kansi": [],
-    "miinat": 0,
+    "tyhjat": [],
+    "aloitus_aika": 0.0
+}
+
+asetukset = {
+    "pelaaja_nimi": "P1",
     "kentan_leveys": 0,
     "kentan_korkeus": 0,
     "ikkunan_leveys": 0,
-    "ikkunan_korkeus": 0
+    "ikkunan_korkeus": 0,
+    "miinat": 0
 }
 
 # Vaikeus tasot: [leveys, korkeus, miinojen määrä]
@@ -25,6 +33,7 @@ HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
 VAIKEA = [30, 16, 99]
 
+PVM = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Päivämäärä ja aika
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
 
 
@@ -73,10 +82,10 @@ def luo_kentta():
     """
     kentta, kansi, tyhjat_ruudut = ([] for _ in range(3))
 
-    for y in range(pelidata["kentan_korkeus"]):
+    for y in range(asetukset["kentan_korkeus"]):
         kentta.append([])
         kansi.append([])
-        for x in range(pelidata["kentan_leveys"]):
+        for x in range(asetukset["kentan_leveys"]):
             kentta[-1].append(0)
             kansi[-1].append(0)
             tyhjat_ruudut.append((x, y))
@@ -143,7 +152,7 @@ def miinoita(turva_alue):
     """
 
     luku = 0
-    while luku < pelidata["miinat"]:
+    while luku < asetukset["miinat"]:
         if not pelidata["tyhjat"]:
             x, y = turva_alue.pop()
             pelidata["kentta"][y][x] = -1
@@ -170,26 +179,26 @@ def piirra_kentta():
             if pelidata['kansi'][y][x] == 9:
                 haravasto.lisaa_piirrettava_ruutu('f',
                                                   x * SPRITE_SIVU,
-                                                  pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                  asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
             elif pelidata['kansi'][y][x] == 1:
                 if asia == -1:
                     haravasto.lisaa_piirrettava_ruutu('x',
                                                       x * SPRITE_SIVU,
-                                                      pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                      asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
                 else:
                     haravasto.lisaa_piirrettava_ruutu(str(asia),
                                                       x * 40,
-                                                      pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                      asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
             else:
                 haravasto.lisaa_piirrettava_ruutu(" ",
                                                   x * 40,
-                                                  pelidata["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                                                  asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
 
     if "game_over" in pelidata:
         if "xr" in haravasto.grafiikka["kuvat"]:
             haravasto.lisaa_piirrettava_ruutu('xr',
                                               pelidata["game_over"][0] * SPRITE_SIVU,
-                                              pelidata["ikkunan_korkeus"] -
+                                              asetukset["ikkunan_korkeus"] -
                                               (SPRITE_SIVU * (pelidata["game_over"][1] + 1)))
     haravasto.piirra_ruudut()
 
@@ -259,7 +268,7 @@ def voitto_tarkistus():
         for x, ruutu in enumerate(rivi):
             if ruutu == 0 or ruutu == 9:
                 avaamattomat += 1
-    if avaamattomat == pelidata["miinat"]:
+    if avaamattomat == asetukset["miinat"]:
         for y, rivi in enumerate(pelidata["kansi"]):
             for x, ruutu in enumerate(rivi):
                 if ruutu == 0:
@@ -275,7 +284,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     Tulostaa hiiren sijainnin sekä painetun napin terminaaliin.
     """
     ruutu_x = x // SPRITE_SIVU
-    ruutu_y = (pelidata["kentan_korkeus"] - 1) - (y // SPRITE_SIVU)
+    ruutu_y = (asetukset["kentan_korkeus"] - 1) - (y // SPRITE_SIVU)
 
     if "voitto" in pelidata:
         if tapahtuma == haravasto.HIIRI_VASEN:
@@ -297,6 +306,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
                         miinoita(turva_alue)
                         numeroi()
                         tulvataytto(ruutu_x, ruutu_y)
+                        pelidata["aika"] = time.time()
                     else:
                         tulvataytto(ruutu_x, ruutu_y)
 
@@ -310,11 +320,11 @@ def kasittele_hiiri(x, y, tapahtuma, _):
 
 
 def aseta_vaikeustaso(vaikeustaso):
-    pelidata["kentan_leveys"] = vaikeustaso[0]
-    pelidata["kentan_korkeus"] = vaikeustaso[1]
-    pelidata["miinat"] = vaikeustaso[2]
-    pelidata["ikkunan_leveys"] = pelidata["kentan_leveys"] * SPRITE_SIVU
-    pelidata["ikkunan_korkeus"] = pelidata["kentan_korkeus"] * SPRITE_SIVU
+    asetukset["kentan_leveys"] = vaikeustaso[0]
+    asetukset["kentan_korkeus"] = vaikeustaso[1]
+    asetukset["miinat"] = vaikeustaso[2]
+    asetukset["ikkunan_leveys"] = asetukset["kentan_leveys"] * SPRITE_SIVU
+    asetukset["ikkunan_korkeus"] = asetukset["kentan_korkeus"] * SPRITE_SIVU
 
 
 def tarkista_syote(teksti, rajat):
@@ -330,7 +340,7 @@ def tarkista_syote(teksti, rajat):
             if rajat[1] > syote > rajat[0]:
                 break
             else:
-                print(f"On oltava välillä ({rajat[0]} - {rajat[1]})")
+                print(f"On oltava välillä ({rajat[0] + 1} - {rajat[1] - 1})")
         except ValueError:
             print("Täytyy olla kokonaisluku!")
 
@@ -348,7 +358,7 @@ def luo_mukautettu_peli():
 
 
 def parametrien_syotto():
-    pelidata["pelaaja_nimi"] = input("Anna pelaaja nimi: ")
+    asetukset["pelaaja_nimi"] = input("Anna pelaaja nimi: ")
 
     print("Vaikeustasot, Kentän koko, miinojen määrä:")
     print(f"Helppo(h) = {HELPPO[0]}x{HELPPO[1]}, {HELPPO[2]} miinaa")
@@ -379,8 +389,8 @@ def main():
     parametrien_syotto()
     luo_kentta()
     haravasto.lataa_kuvat("spritet")
-    haravasto.luo_ikkuna(SPRITE_SIVU * pelidata["kentan_leveys"],
-                         SPRITE_SIVU * pelidata["kentan_korkeus"])
+    haravasto.luo_ikkuna(SPRITE_SIVU * asetukset["kentan_leveys"],
+                         SPRITE_SIVU * asetukset["kentan_korkeus"])
     haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
     haravasto.aseta_piirto_kasittelija(piirra_kentta)
     haravasto.aloita()
