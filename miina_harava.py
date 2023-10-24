@@ -306,7 +306,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
                         miinoita(turva_alue)
                         numeroi()
                         tulvataytto(ruutu_x, ruutu_y)
-                        pelidata["aika"] = time.time()
+                        pelidata["aloitus_aika"] = time.time()
                     else:
                         tulvataytto(ruutu_x, ruutu_y)
 
@@ -382,6 +382,14 @@ def parametrien_syotto():
             break
 
 
+def tallenna_tulokset():
+    print(f'Miinaharava-peli({asetukset["kentan_leveys"]}x{asetukset["kentan_korkeus"]}), miinat:{asetukset["miinat"]}')
+    print(f'päivä: {PVM}')
+    aika = time.time() - pelidata["aloitus_aika"]
+    print(f'{asetukset["pelaaja_nimi"]}, '
+          f'aika:{time.strftime("%H:%M:%S",time.gmtime(aika))}')
+
+
 def main():
     """
     Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
@@ -394,6 +402,7 @@ def main():
     haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
     haravasto.aseta_piirto_kasittelija(piirra_kentta)
     haravasto.aloita()
+    tallenna_tulokset()
 
 
 if __name__ == '__main__':
