@@ -21,6 +21,7 @@ pelidata = {
 
 asetukset = {
     "pelaaja_nimi": "P1",
+    "vaikeustaso": "",
     "kentan_leveys": 0,
     "kentan_korkeus": 0,
     "ikkunan_leveys": 0,
@@ -33,7 +34,6 @@ HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
 VAIKEA = [30, 16, 99]
 
-PVM = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Päivämäärä ja aika
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
 
 
@@ -50,7 +50,7 @@ def numeroi():
             if kentta[y][x] == -1:
                 continue
 
-            if y > 0 and kentta[y-1][x] == -1:
+            if y > 0 and kentta[y - 1][x] == -1:
                 kentta[y][x] += 1
 
             if y < y_raja and kentta[y + 1][x] == -1:
@@ -353,12 +353,19 @@ def luo_mukautettu_peli():
     korkeus = tarkista_syote("korkeus", (1, 101))
     mukautettu.append(leveys)
     mukautettu.append(korkeus)
-    mukautettu.append(tarkista_syote("miinojen määrä", (0, leveys*korkeus)))
+    mukautettu.append(tarkista_syote("miinojen määrä", (0, leveys * korkeus)))
     aseta_vaikeustaso(mukautettu)
 
 
 def parametrien_syotto():
-    asetukset["pelaaja_nimi"] = input("Anna pelaaja nimi: ")
+    while True:
+        nimi = input("Anna pelaaja nimi: ")
+        if "|" in nimi:
+            print("'|' ei ole kelvollinen merkki pelaaja nimessä")
+            # rikkoo tulosten tallennuksen, koska se käyttää |-merkkiä jakamaan tulokset
+        else:
+            asetukset["pelaaja_nimi"] = nimi
+            break
 
     print("Vaikeustasot, Kentän koko, miinojen määrä:")
     print(f"Helppo(h) = {HELPPO[0]}x{HELPPO[1]}, {HELPPO[2]} miinaa")
@@ -369,25 +376,37 @@ def parametrien_syotto():
     while True:
         valinta = input("Anna vaikeustaso: ").lower()
         if valinta == "h" or valinta == "helppo":
+            asetukset["vaikeustaso"] = "helppo"
             aseta_vaikeustaso(HELPPO)
             break
         elif valinta == "n" or valinta == "normaali":
+            asetukset["vaikeustaso"] = "normaali"
             aseta_vaikeustaso(NORMAALI)
             break
         elif valinta == "v" or valinta == "vaikea":
+            asetukset["vaikeustaso"] = "vaikea"
             aseta_vaikeustaso(VAIKEA)
             break
         elif valinta == "m" or valinta == "mukautettu":
+            asetukset["vaikeustaso"] = "mukautettu"
             luo_mukautettu_peli()
             break
 
 
 def tallenna_tulokset():
-    print(f'Miinaharava-peli({asetukset["kentan_leveys"]}x{asetukset["kentan_korkeus"]}), miinat:{asetukset["miinat"]}')
-    print(f'päivä: {PVM}')
-    aika = time.time() - pelidata["aloitus_aika"]
-    print(f'{asetukset["pelaaja_nimi"]}, '
-          f'aika:{time.strftime("%H:%M:%S",time.gmtime(aika))}')
+    if "voitto" in pelidata:
+        paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
+        aika = time.strftime("%H:%M:%S", time.gmtime(time.time() - pelidata["aloitus_aika"]))
+        with open("tulokset.txt", "a+") as tulokset:
+            tulos_lista = [paiva_aika,
+                           asetukset["vaikeustaso"],
+                           asetukset["pelaaja_nimi"],
+                           aika,
+                           str(asetukset["kentan_leveys"]),
+                           str(asetukset["kentan_korkeus"]),
+                           str(asetukset["miinat"])]
+            tulos_rivi = "|".join(tulos_lista) + "\n"
+            tulokset.write(tulos_rivi)
 
 
 def main():
