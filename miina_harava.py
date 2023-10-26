@@ -187,30 +187,27 @@ def piirra_kentta():
 
     for y, rivi in enumerate(pelidata['kentta']):
         for x, asia in enumerate(rivi):
+            ruutu_x = x * SPRITE_SIVU
+            ruutu_y = asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1))
+
             if pelidata['kansi'][y][x] == 9:
-                haravasto.lisaa_piirrettava_ruutu('f',
-                                                  x * SPRITE_SIVU,
-                                                  asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                haravasto.lisaa_piirrettava_ruutu('f', ruutu_x, ruutu_y)
+
             elif pelidata['kansi'][y][x] == 1:
                 if asia == -1:
-                    haravasto.lisaa_piirrettava_ruutu('x',
-                                                      x * SPRITE_SIVU,
-                                                      asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                    haravasto.lisaa_piirrettava_ruutu('x', ruutu_x, ruutu_y)
                 else:
-                    haravasto.lisaa_piirrettava_ruutu(str(asia),
-                                                      x * 40,
-                                                      asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                    haravasto.lisaa_piirrettava_ruutu(str(asia), ruutu_x, ruutu_y)
             else:
-                haravasto.lisaa_piirrettava_ruutu(" ",
-                                                  x * 40,
-                                                  asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1)))
+                haravasto.lisaa_piirrettava_ruutu(" ", ruutu_x, ruutu_y)
 
     if "game_over" in pelidata:
+        # tarkistaa, että punainen miina löytyy haravastosta
         if "xr" in haravasto.grafiikka["kuvat"]:
-            haravasto.lisaa_piirrettava_ruutu('xr',
-                                              pelidata["game_over"][0] * SPRITE_SIVU,
-                                              asetukset["ikkunan_korkeus"] -
-                                              (SPRITE_SIVU * (pelidata["game_over"][1] + 1)))
+            ruutu_x = pelidata["game_over"][0] * SPRITE_SIVU
+            ruutu_y = asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (pelidata["game_over"][1] + 1))
+            haravasto.lisaa_piirrettava_ruutu('xr', ruutu_x, ruutu_y)
+
     haravasto.piirra_ruudut()
 
 
