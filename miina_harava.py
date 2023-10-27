@@ -88,6 +88,11 @@ def luo_kentta():
     luo kentän ja kannen (kaksiuloitteienen lista, jonka kaikki arvot = 0).
     Lisäksi luo listan, jossa on kaikki kentän ruutujen koordinaatti parit muodossa (x,y).
     """
+    if "voitto" in pelidata:
+        del pelidata["voitto"]
+    elif "game_over" in pelidata:
+        del pelidata["game_over"]
+
     kentta, kansi, tyhjat_ruudut = ([] for _ in range(3))
 
     for y in range(asetukset["kentan_korkeus"]):
@@ -172,7 +177,7 @@ def miinoita(turva_alue):
             pelidata["kentta"][y][x] = -1
         luku += 1
 
-    pelidata["tyhjat"].pop()
+    pelidata["tyhjat"] = []
 
 
 def piirra_kentta():
@@ -431,7 +436,7 @@ def parametrien_syotto():
 
 def tallenna_tulokset():
     """
-    Tallentaa tulokset, jos peli päättyy voittoon. Tulokset tallennetaan tulokset.txt tiedostoon muodossa
+    Tallentaa tulokset, jos peli päättyy voittoon. Tulokset tallennetaan tiedostoon 'tulokset.txt' muodossa
     'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm'
     """
     if "voitto" in pelidata:
@@ -453,15 +458,40 @@ def main():
     """
     Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
     """
-    parametrien_syotto()
-    luo_kentta()
-    haravasto.lataa_kuvat("spritet")
-    haravasto.luo_ikkuna(SPRITE_SIVU * asetukset["kentan_leveys"],
-                         SPRITE_SIVU * asetukset["kentan_korkeus"])
-    haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
-    haravasto.aseta_piirto_kasittelija(piirra_kentta)
-    haravasto.aloita()
-    tallenna_tulokset()
+    print("- - -Miinaharava- - -")
+    print("")
+
+    while True:
+        print("_| Päävalikko |_")
+        print("- Uusi peli (u)")
+        print("- Tulostaulukko (t)")
+        print("- Lopeta (q)")
+        valinta = input("Anna valinta: ").lower()
+
+        if valinta == "q" or valinta == "lopeta":
+            break
+
+        elif valinta == "u" or valinta == "uusi peli":
+            parametrien_syotto()
+            luo_kentta()
+            haravasto.lataa_kuvat("spritet")
+            haravasto.luo_ikkuna(SPRITE_SIVU * asetukset["kentan_leveys"],
+                                 SPRITE_SIVU * asetukset["kentan_korkeus"])
+            haravasto.aseta_hiiri_kasittelija(kasittele_hiiri)
+            haravasto.aseta_piirto_kasittelija(piirra_kentta)
+            haravasto.aloita()
+            tallenna_tulokset()
+
+        elif valinta == "t" or valinta == "tulostaulukko":
+            pass
+
+        else:
+            print("Virheellinen syöte!")
+            print()
+            continue
+
+        for _ in range(10):
+            print()
 
 
 if __name__ == '__main__':
