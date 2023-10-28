@@ -29,12 +29,13 @@ asetukset = {
     "miinat": 0
 }
 
-# Vaikeus tasot: [leveys, korkeus, miinojen määrä]
+# Vaikeustasot: [leveys, korkeus, miinojen määrä]
 HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
 VAIKEA = [30, 16, 99]
 
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
+MINMAX = (1, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
 
 
 def numeroi():
@@ -299,15 +300,14 @@ def voitto_tarkistus():
                 if ruutu == 0:
                     pelidata["kansi"][y][x] = 9
 
-        pelidata["voitto"] = time.strftime("%H:%M:%S", time.gmtime(time.time() - pelidata["aloitus_aika"]))
+        pelidata["voitto"] = time.time() - pelidata["aloitus_aika"]
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä lopettaaksesi pelin")
 
 
 def kasittele_hiiri(x, y, tapahtuma, _):
     """
-    Tätä funktiota kutsutaan kun käyttäjä klikkaa sovellusikkunaa hiirellä.
-    Tulostaa hiiren sijainnin sekä painetun napin terminaaliin.
+    Tätä funktiota kutsutaan, kun käyttäjä klikkaa sovellusikkunaa hiirellä.
     """
     ruutu_x = x // SPRITE_SIVU
     ruutu_y = (asetukset["kentan_korkeus"] - 1) - (y // SPRITE_SIVU)
@@ -315,29 +315,28 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     if "voitto" in pelidata:
         if tapahtuma == haravasto.HIIRI_VASEN:
             haravasto.lopeta()
+
     elif "game_over" in pelidata:
         if tapahtuma == haravasto.HIIRI_VASEN:
             haravasto.lopeta()
 
     else:
         if tapahtuma == haravasto.HIIRI_VASEN:
-            if pelidata["kansi"][ruutu_y][ruutu_x] != 9:
+            if pelidata["kansi"][ruutu_y][ruutu_x] != 9:  # Tarkistetaan, että klikattu ruutu ei ole lippu
 
-                if pelidata["kentta"][ruutu_y][ruutu_x] == -1:
+                if pelidata["kentta"][ruutu_y][ruutu_x] == -1:  # Jos klikattu ruutu on miina -> Game over
                     pelidata["game_over"] = (ruutu_x, ruutu_y)
                     nayta_miinat()
+
                 else:
-                    if pelidata["tyhjat"]:
+                    if pelidata["tyhjat"]:  # Tarkistetaan onko klikkaus pelin aloitus
                         turva_alue = luo_turva_alue(ruutu_x, ruutu_y)
                         miinoita(turva_alue)
                         numeroi()
-                        tulvataytto(ruutu_x, ruutu_y)
                         pelidata["aloitus_aika"] = time.time()
-                    else:
-                        tulvataytto(ruutu_x, ruutu_y)
+                    tulvataytto(ruutu_x, ruutu_y)
 
         elif tapahtuma == haravasto.HIIRI_OIKEA:
-
             if pelidata["kansi"][ruutu_y][ruutu_x] == 0:
                 pelidata["kansi"][ruutu_y][ruutu_x] = 9
 
@@ -382,8 +381,8 @@ def luo_mukautettu_peli():
     luo vaikeustaso lista peliin käyttäjän antamien syötteiden mukaan.
     """
     mukautettu = []
-    leveys = tarkista_syote("leveys", (1, 101))
-    korkeus = tarkista_syote("korkeus", (1, 101))
+    leveys = tarkista_syote("leveys", MINMAX)
+    korkeus = tarkista_syote("korkeus", MINMAX)
     mukautettu.append(leveys)
     mukautettu.append(korkeus)
     mukautettu.append(tarkista_syote("miinojen määrä", (0, leveys * korkeus)))
@@ -398,7 +397,7 @@ def parametrien_syotto():
         nimi = input("Anna pelaaja nimi: ")
         if "|" in nimi:
             print("'|' ei ole kelvollinen merkki pelaaja nimessä")
-            # rikkoo tulosten tallennuksen, koska se käyttää |-merkkiä jakamaan tulokset
+            # rikkoo tulosten tallennuksen, koska tallennus käyttää |-merkkiä jakamaan tulokset
         else:
             asetukset["pelaaja_nimi"] = nimi
             break
@@ -441,7 +440,7 @@ def tallenna_tulokset():
     """
     if "voitto" in pelidata:
         paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = pelidata["voitto"]
+        aika = str(pelidata["voitto"])
         with open("tulokset.txt", "a+") as tulokset:
             tulos_lista = [paiva_aika,
                            asetukset["vaikeustaso"],
@@ -454,7 +453,83 @@ def tallenna_tulokset():
             tulokset.write(tulos_rivi)
 
 
-def main():
+def t_sort(data):
+    """
+    Sorttaus funktio, tulostaulukon järjestämiseen
+    """
+    return float(data[2])
+
+
+def tulosta_taulukko(tulosdata, taso, mukautettu=False):
+    print()
+    tuloslista = tulosdata[taso]
+
+    if not mukautettu:
+        tuloslista.sort(key=t_sort)
+        print(f"__| TOP-10 ({taso}) |__")
+        for idx in range(0, len(tuloslista)):
+            if idx > 10:
+                break
+            pelaaja = tuloslista[idx]
+            aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))
+            print(f"{idx + 1}. {pelaaja[1]} - {aika} ({pelaaja[0]})")
+        return
+
+    print(f"__| Viimeisimmät ({taso}) |__")
+    tuloslista.reverse()
+    for idx in range(0, len(tuloslista)):
+        if idx > 10:
+            break
+        pelaaja = tuloslista[idx]
+        aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))
+        print(f"{idx + 1}. {pelaaja[1]} - {aika} [{pelaaja[3]}x{pelaaja[4]}/{pelaaja[5]}] ({pelaaja[0]})")
+
+
+def tulosvalikko():
+    tiedosto = False
+    tulosdata = {"helppo": [],
+                 "normaali": [],
+                 "vaikea": [],
+                 "mukautettu": []
+                 }
+
+    try:
+        with open("tulokset.txt") as tulokset:
+            for tulos in tulokset:
+                pvm, taso, nimi, aika, lev, kor, m = tulos.rstrip().split("|")
+                tulosdata[taso].append([pvm, nimi, aika, lev, kor, m])
+            tiedosto = True
+    except OSError:
+        print("'tulokset.txt' ei löydy!")
+        print("Voita peli vähintään kerran ja yritä uudestaan")
+
+    if tiedosto:
+        while True:
+            print()
+            print("Anna vaikeustaso, jonka tulostaulukon haluat tulostettavaksi tai palaa päävalikkoon")
+            print("Valinnat: helppo(h), normaali(n), vaikea(v), mukautettu(m), palaa päävalikkoon(b)")
+            valinta = input("Anna valinta: ").lower()
+
+            if valinta == "b" or valinta == "palaa päävalikkoon":
+                break
+
+            elif valinta == "h" or valinta == "helppo":
+                tulosta_taulukko(tulosdata, "helppo")
+
+            elif valinta == "n" or valinta == "normaali":
+                tulosta_taulukko(tulosdata, "normaali")
+
+            elif valinta == "v" or valinta == "vaikea":
+                tulosta_taulukko(tulosdata, "vaikea")
+
+            elif valinta == "m" or valinta == "mukautettu":
+                tulosta_taulukko(tulosdata, "mukautettu", True)
+
+
+
+
+
+def paavalikko():
     """
     Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
     """
@@ -483,7 +558,7 @@ def main():
             tallenna_tulokset()
 
         elif valinta == "t" or valinta == "tulostaulukko":
-            pass
+            tulosvalikko()
 
         else:
             print("Virheellinen syöte!")
@@ -492,6 +567,10 @@ def main():
 
         for _ in range(10):
             print()
+
+
+def main():
+    paavalikko()
 
 
 if __name__ == '__main__':
