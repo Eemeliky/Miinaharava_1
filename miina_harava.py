@@ -354,11 +354,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     if ruutu_x > -1 and ruutu_y > -1:  # Tarkistetaan, että klikkaus on pelikentällä,
         # koska on mahdollista klikata pelikentän ulkopuolelle, mutta sovellusikkunan sisälle
 
-        if "voitto" in pelidata:
-            if tapahtuma == haravasto.HIIRI_VASEN:
-                haravasto.lopeta()
-
-        elif "game_over" in pelidata:
+        if "voitto" in pelidata or "game_over" in pelidata:
             if tapahtuma == haravasto.HIIRI_VASEN:
                 haravasto.lopeta()
 
