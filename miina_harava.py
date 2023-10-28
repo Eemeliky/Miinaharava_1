@@ -20,7 +20,7 @@ pelidata = {
 }
 
 asetukset = {
-    "pelaaja_nimi": "P1",
+    "pelaaja_nimi": "Aasi",
     "vaikeustaso": "",
     "kentan_leveys": 0,
     "kentan_korkeus": 0,
@@ -36,6 +36,7 @@ VAIKEA = [30, 16, 99]
 
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
 MINMAX = (1, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
+# Suositeltu maksimi kentän koko 1920x1080 näytölle on (47,26)
 
 
 def numeroi():
@@ -279,7 +280,7 @@ def nayta_miinat():
             if ruutu == -1:
                 pelidata["kansi"][y][x] = 1
     print("GAME OVER!")
-    print("Klikkaa minne tahansa pelikentällä lopettaaksesi pelin")
+    print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
 
 def voitto_tarkistus():
@@ -302,7 +303,7 @@ def voitto_tarkistus():
 
         pelidata["voitto"] = time.time() - pelidata["aloitus_aika"]
         print("VOITIT PELIN!!!")
-        print("Klikkaa minne tahansa pelikentällä lopettaaksesi pelin")
+        print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
 
 def kasittele_hiiri(x, y, tapahtuma, _):
@@ -372,6 +373,7 @@ def tarkista_syote(teksti, rajat):
                 print(f"On oltava välillä ({rajat[0] + 1} - {rajat[1] - 1})")
         except ValueError:
             print("Täytyy olla kokonaisluku!")
+        print()
 
     return syote
 
@@ -412,22 +414,31 @@ def parametrien_syotto():
 
     while True:
         valinta = input("Anna vaikeustaso: ").lower()
+
         if valinta == "h" or valinta == "helppo":
             asetukset["vaikeustaso"] = "helppo"
             aseta_vaikeustaso(HELPPO)
             break
+
         elif valinta == "n" or valinta == "normaali":
             asetukset["vaikeustaso"] = "normaali"
             aseta_vaikeustaso(NORMAALI)
             break
+
         elif valinta == "v" or valinta == "vaikea":
             asetukset["vaikeustaso"] = "vaikea"
             aseta_vaikeustaso(VAIKEA)
             break
+
         elif valinta == "m" or valinta == "mukautettu":
             asetukset["vaikeustaso"] = "mukautettu"
             luo_mukautettu_peli()
             break
+
+        else:
+            print("Virheellinen syöte!")
+            print()
+            continue
 
     for _ in range(3):
         print()
@@ -455,12 +466,18 @@ def tallenna_tulokset():
 
 def t_sort(data):
     """
-    Sorttaus funktio, tulostaulukon järjestämiseen
+    Sorttaus-funktio, tulostaulukon järjestämiseen
     """
     return float(data[2])
 
 
 def tulosta_taulukko(tulosdata, taso, mukautettu=False):
+    """
+    Tulostaa halutun tulostaulukon TOP-10 järjestykseen(ei koske mukauttettua)
+    :param tulosdata: dict, vaikeustasot avaimina
+    :param taso: str, vaikeustaso
+    :param mukautettu: lippu mukautetun pelin tuloksille
+    """
     print()
     tuloslista = tulosdata[taso]
 
@@ -482,10 +499,13 @@ def tulosta_taulukko(tulosdata, taso, mukautettu=False):
             break
         pelaaja = tuloslista[idx]
         aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))
-        print(f"{idx + 1}. {pelaaja[1]} - {aika} [{pelaaja[3]}x{pelaaja[4]}/{pelaaja[5]}] ({pelaaja[0]})")
+        print(f"{idx + 1}. {pelaaja[1]} - {aika} [{pelaaja[3]}x{pelaaja[4]}|{pelaaja[5]}] ({pelaaja[0]})")
 
 
 def tulosvalikko():
+    """
+    Valikko tulostaulukon tulostukseen
+    """
     tiedosto = False
     tulosdata = {"helppo": [],
                  "normaali": [],
@@ -525,13 +545,17 @@ def tulosvalikko():
             elif valinta == "m" or valinta == "mukautettu":
                 tulosta_taulukko(tulosdata, "mukautettu", True)
 
-
-
+            else:
+                print("Virheellinen syöte!")
+                print()
+                continue
 
 
 def paavalikko():
     """
-    Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat, luo peli-ikkunan ja asettaa siihen piirtokäsittelijän.
+    Pelin päävalikko. uusi peli: Kysyy käyttäjältä pelin parametrit, Lataa pelin grafiikat,
+    luo peli-ikkunan ja asettaa siihen piirtokäsittelijän. tulostaulukko: avaa tulostaulukko valikon.
+    lopeta: lopettaa pelin.
     """
     print("- - -Miinaharava- - -")
     print("")
