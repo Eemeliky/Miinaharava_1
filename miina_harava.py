@@ -306,43 +306,68 @@ def voitto_tarkistus():
         print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
 
+def liputus(x, y):
+    """
+    Lisää ruutun lipun tai poistaa olemassa olevan lipun
+    :param x: Klikatun ruudun x-indeksi
+    :param y: Klikatun ruudun y-indeksi
+    """
+    if pelidata["kansi"][y][x] == 0:
+        pelidata["kansi"][y][x] = 9
+
+    elif pelidata["kansi"][y][x] == 9:
+        pelidata["kansi"][y][x] = 0
+
+
+def ruudun_avaus(x, y):
+    """
+    Tarkistaa ruudun avaukseen liittyvät tapaukset ja suorittaa siihen liittyvät toiminnot
+    :param x: Klikatun ruudun x-indeksi
+    :param y: Klikatun ruudun y-indeksi
+    """
+    if pelidata["kansi"][y][x] != 9:  # Tarkistetaan, että klikattu ruutu ei ole lippu
+
+        if pelidata["kentta"][y][x] == -1:  # Jos klikattu ruutu on miina -> Game over
+            pelidata["game_over"] = (x, y)
+            nayta_miinat()
+
+        else:
+            if pelidata["tyhjat"]:  # Tarkistetaan onko klikkaus pelin aloitus
+                turva_alue = luo_turva_alue(x, y)
+                miinoita(turva_alue)
+                numeroi()
+                pelidata["aloitus_aika"] = time.time()
+            tulvataytto(x, y)
+
+
 def kasittele_hiiri(x, y, tapahtuma, _):
     """
     Tätä funktiota kutsutaan, kun käyttäjä klikkaa sovellusikkunaa hiirellä.
+    :param x: Klikkauksen x-koordinaatti peli-ikkunassa
+    :param y: Klikkauksen y-koordinaatti peli-ikkunassa
+    :param tapahtuma: hiiren nappi(vasen, oikea vai keski)
+    :param _: käyttämätön muuttuja, muokkausnäppäimille
     """
     ruutu_x = x // SPRITE_SIVU
     ruutu_y = (asetukset["kentan_korkeus"] - 1) - (y // SPRITE_SIVU)
 
-    if "voitto" in pelidata:
-        if tapahtuma == haravasto.HIIRI_VASEN:
-            haravasto.lopeta()
+    if ruutu_x > -1 and ruutu_y > -1:  # Tarkistetaan, että klikkaus on pelikentällä,
+        # koska on mahdollista klikata pelikentän ulkopuolelle, mutta sovellusikkunan sisälle
 
-    elif "game_over" in pelidata:
-        if tapahtuma == haravasto.HIIRI_VASEN:
-            haravasto.lopeta()
+        if "voitto" in pelidata:
+            if tapahtuma == haravasto.HIIRI_VASEN:
+                haravasto.lopeta()
 
-    else:
-        if tapahtuma == haravasto.HIIRI_VASEN:
-            if pelidata["kansi"][ruutu_y][ruutu_x] != 9:  # Tarkistetaan, että klikattu ruutu ei ole lippu
+        elif "game_over" in pelidata:
+            if tapahtuma == haravasto.HIIRI_VASEN:
+                haravasto.lopeta()
 
-                if pelidata["kentta"][ruutu_y][ruutu_x] == -1:  # Jos klikattu ruutu on miina -> Game over
-                    pelidata["game_over"] = (ruutu_x, ruutu_y)
-                    nayta_miinat()
+        else:
+            if tapahtuma == haravasto.HIIRI_VASEN:
+                ruudun_avaus(ruutu_x, ruutu_y)
 
-                else:
-                    if pelidata["tyhjat"]:  # Tarkistetaan onko klikkaus pelin aloitus
-                        turva_alue = luo_turva_alue(ruutu_x, ruutu_y)
-                        miinoita(turva_alue)
-                        numeroi()
-                        pelidata["aloitus_aika"] = time.time()
-                    tulvataytto(ruutu_x, ruutu_y)
-
-        elif tapahtuma == haravasto.HIIRI_OIKEA:
-            if pelidata["kansi"][ruutu_y][ruutu_x] == 0:
-                pelidata["kansi"][ruutu_y][ruutu_x] = 9
-
-            elif pelidata["kansi"][ruutu_y][ruutu_x] == 9:
-                pelidata["kansi"][ruutu_y][ruutu_x] = 0
+            elif tapahtuma == haravasto.HIIRI_OIKEA:
+                liputus(ruutu_x, ruutu_y)
 
 
 def aseta_vaikeustaso(vaikeustaso):
