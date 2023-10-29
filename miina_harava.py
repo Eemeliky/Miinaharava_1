@@ -226,47 +226,47 @@ def tulvataytto(aloitus_x, aloitus_y):
     """
     kentta = pelidata["kentta"]
     kansi = pelidata["kansi"]
-    fill_list = [(aloitus_x, aloitus_y)]
+    taytto_lista = [(aloitus_x, aloitus_y)]
     y_raja = len(kentta)
     x_raja = len(kentta[0])
 
-    while len(fill_list) > 0:
-        x, y = fill_list.pop()
+    while len(taytto_lista) > 0:
+        x, y = taytto_lista.pop()
         if kentta[y][x] != -1 and kansi[y][x] == 0:
             kansi[y][x] = 1
             if not kentta[y][x] > 0:
 
                 # alas
                 if y > 0 and kansi[y - 1][x] == 0:
-                    fill_list.append((x, y - 1))
+                    taytto_lista.append((x, y - 1))
 
                 # ylös
                 if y < y_raja - 1 and kansi[y + 1][x] == 0:
-                    fill_list.append((x, y + 1))
+                    taytto_lista.append((x, y + 1))
 
                 # vasen
                 if x > 0 and kansi[y][x - 1] == 0:
-                    fill_list.append((x - 1, y))
+                    taytto_lista.append((x - 1, y))
 
                 # oikea
                 if x < x_raja - 1 and kansi[y][x + 1] == 0:
-                    fill_list.append((x + 1, y))
+                    taytto_lista.append((x + 1, y))
 
                 # vasen ala
                 if y > 0 and x > 0 and kansi[y - 1][x - 1] == 0:
-                    fill_list.append((x - 1, y - 1))
+                    taytto_lista.append((x - 1, y - 1))
 
                 # oikea ala
                 if y > 0 and x < x_raja - 1 and kansi[y - 1][x + 1] == 0:
-                    fill_list.append((x + 1, y - 1))
+                    taytto_lista.append((x + 1, y - 1))
 
                 # vasen ylä
                 if y < y_raja - 1 and x > 0 and kansi[y + 1][x - 1] == 0:
-                    fill_list.append((x - 1, y + 1))
+                    taytto_lista.append((x - 1, y + 1))
 
                 # oikea ylä
                 if y < y_raja - 1 and x < x_raja - 1 and kansi[y + 1][x + 1] == 0:
-                    fill_list.append((x + 1, y + 1))
+                    taytto_lista.append((x + 1, y + 1))
 
     voitto_tarkistus()
 
