@@ -1,10 +1,11 @@
 """
 Miinaharava - yksinkertainen miinaharava peli.
 
-@author: Eemeli Kyröläinen, Oulun yliopisto
+@author: Eemeli Kyröläinen, student, Oulun yliopisto 2023
 
 Peli toimii valmiiksi annetun haravasto kirjaston avulla. Pelissä on kolme vaikeustaso (helppo, normaali, vaikea).
-Lisäksi voit luoda oman mukautetun pelin halutuilla dimensioilla ja miinojen määrällä. Peli tallentaa [IMPLEMENT SAVES]
+Lisäksi voit luoda oman mukautetun pelin halutuilla dimensioilla ja miinojen määrällä. Peli tallentaa voitot/häviöt ja
+niihin liittyvät statistiikan.
 """
 
 import random
@@ -16,7 +17,9 @@ pelidata = {
     "kentta": [],
     "kansi": [],
     "tyhjat": [],
-    "aloitus_aika": 0.0
+    "aloitus_aika": 0.0,
+    "vuorot": 0,
+    "lopputulos": "häviö"
 }
 
 asetukset = {
@@ -268,12 +271,13 @@ def tulvataytto(aloitus_x, aloitus_y):
                 if y < y_raja - 1 and x < x_raja - 1 and kansi[y + 1][x + 1] == 0:
                     taytto_lista.append((x + 1, y + 1))
 
+    pelidata["vuorot"] += 1
     voitto_tarkistus()
 
 
 def nayta_miinat():
     """
-    Käy läpi kentän miinat ja asettaa ne näkyviksi.
+    Käy läpi kentän miinat ja asettaa ne näkyviksi. Kutsutaan vain 'Game over'-tilanteessa.
     """
     for y, rivi in enumerate(pelidata["kentta"]):
         for x, ruutu in enumerate(rivi):
@@ -302,6 +306,7 @@ def voitto_tarkistus():
                     pelidata["kansi"][y][x] = 9
 
         pelidata["voitto"] = time.time() - pelidata["aloitus_aika"]
+        pelidata["lopputulos"] = "voitto"
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -467,20 +472,38 @@ def parametrien_syotto():
 
 def tallenna_tulokset():
     """
-    Tallentaa tulokset, jos peli päättyy voittoon. Tulokset tallennetaan tiedostoon 'tulokset.txt' muodossa
-    'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm'
+    Tallentaa tulokset, jos peli päättyy voittoon tiedostoon 'tulokset.txt'.
+    Häviöt tallennetaan tiedostoon 'häviöt.txt'. Molemmat ovat muodossa
+    'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm|vuorot|lopputulos'
     """
     if "voitto" in pelidata:
         paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = str(pelidata["voitto"])
-        with open("tulokset.txt", "a+") as tulokset:
+        aika = str(pelidata["voitto"]) ## ROUND THIS FLOAT TO MORE REASONABLE
+        with open("tulokset.txt", "a+", encoding="utf-8") as tulokset:
             tulos_lista = [paiva_aika,
                            asetukset["vaikeustaso"],
                            asetukset["pelaaja_nimi"],
                            aika,
                            str(asetukset["kentan_leveys"]),
                            str(asetukset["kentan_korkeus"]),
-                           str(asetukset["miinat"])]
+                           str(asetukset["miinat"]),
+                           str(pelidata["vuorot"]),
+                           pelidata["lopputulos"]]
+            tulos_rivi = "|".join(tulos_lista) + "\n"
+            tulokset.write(tulos_rivi)
+    else:
+        paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
+        aika = str(time.time() - pelidata["aloitus_aika"]) ## ROUND THIS FLOAT TO MORE REASONABLE
+        with open("häviöt.txt", "a+", encoding="utf-8") as tulokset:
+            tulos_lista = [paiva_aika,
+                           asetukset["vaikeustaso"],
+                           asetukset["pelaaja_nimi"],
+                           aika,
+                           str(asetukset["kentan_leveys"]),
+                           str(asetukset["kentan_korkeus"]),
+                           str(asetukset["miinat"]),
+                           str(pelidata["vuorot"]),
+                           pelidata["lopputulos"]]
             tulos_rivi = "|".join(tulos_lista) + "\n"
             tulokset.write(tulos_rivi)
 
@@ -537,8 +560,8 @@ def tulosvalikko():
     try:
         with open("tulokset.txt") as tulokset:
             for tulos in tulokset:
-                pvm, taso, nimi, aika, lev, kor, m = tulos.rstrip().split("|")
-                tulosdata[taso].append([pvm, nimi, aika, lev, kor, m])
+                pvm, taso, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos = tulos.rstrip().split("|")
+                tulosdata[taso].append([pvm, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos])
             tiedosto = True
     except OSError:
         print("'tulokset.txt' ei löydy!")
