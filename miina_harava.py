@@ -13,13 +13,13 @@ import haravasto
 import time
 from datetime import datetime
 
+# Voiton/häviön tapahtuessa lisätään avain "voitto"/"game_over" pelidataan.
 pelidata = {
     "kentta": [],
     "kansi": [],
     "tyhjat": [],
     "aloitus_aika": 0.0,
     "vuorot": 0,
-    "lopputulos": "häviö"
 }
 
 asetukset = {
@@ -93,6 +93,7 @@ def luo_kentta():
     luo kentän ja kannen (kaksiuloitteienen lista, jonka kaikki arvot = 0).
     Lisäksi luo listan, jossa on kaikki kentän ruutujen koordinaatti parit muodossa (x,y).
     """
+    pelidata["vuorot"] = 0
     if "voitto" in pelidata:
         del pelidata["voitto"]
     elif "game_over" in pelidata:
@@ -478,34 +479,34 @@ def tallenna_tulokset():
     """
     if "voitto" in pelidata:
         paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = str(pelidata["voitto"]) ## ROUND THIS FLOAT TO MORE REASONABLE
+        aika = round(pelidata["voitto"])
         with open("tulokset.txt", "a+", encoding="utf-8") as tulokset:
             tulos_lista = [paiva_aika,
                            asetukset["vaikeustaso"],
                            asetukset["pelaaja_nimi"],
-                           aika,
+                           str(aika),
                            str(asetukset["kentan_leveys"]),
                            str(asetukset["kentan_korkeus"]),
                            str(asetukset["miinat"]),
                            str(pelidata["vuorot"]),
-                           pelidata["lopputulos"]]
+                           "voitto"]
             tulos_rivi = "|".join(tulos_lista) + "\n"
             tulokset.write(tulos_rivi)
     else:
         paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = str(time.time() - pelidata["aloitus_aika"]) ## ROUND THIS FLOAT TO MORE REASONABLE
-        with open("häviöt.txt", "a+", encoding="utf-8") as tulokset:
-            tulos_lista = [paiva_aika,
+        aika = round(time.time() - pelidata["aloitus_aika"])
+        with open("häviöt.txt", "a+", encoding="utf-8") as haviot:
+            havio_lista = [paiva_aika,
                            asetukset["vaikeustaso"],
                            asetukset["pelaaja_nimi"],
-                           aika,
+                           str(aika),
                            str(asetukset["kentan_leveys"]),
                            str(asetukset["kentan_korkeus"]),
                            str(asetukset["miinat"]),
                            str(pelidata["vuorot"]),
-                           pelidata["lopputulos"]]
-            tulos_rivi = "|".join(tulos_lista) + "\n"
-            tulokset.write(tulos_rivi)
+                           "häviö"]
+            havio_rivi = "|".join(havio_lista) + "\n"
+            haviot.write(havio_rivi)
 
 
 def t_sort(data):
@@ -532,23 +533,23 @@ def tulosta_taulukko(tulosdata, taso, mukautettu=False):
             if idx > 10:
                 break
             pelaaja = tuloslista[idx]
-            aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))
+            aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))  # Maksimi aika tälle formatille on 84399s
             print(f"{idx + 1}. {pelaaja[1]} - {aika} ({pelaaja[0]})")
         return
 
-    print(f"__| Viimeisimmät ({taso}) |__")
+    print(f"__| Voitot ({taso}) |__")
     tuloslista.reverse()
     for idx in range(0, len(tuloslista)):
         if idx > 10:
             break
         pelaaja = tuloslista[idx]
-        aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))
+        aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))  # Maksimi aika tälle formatille on 84399s
         print(f"{idx + 1}. {pelaaja[1]} - {aika} [{pelaaja[3]}x{pelaaja[4]}|{pelaaja[5]}] ({pelaaja[0]})")
 
 
 def tulosvalikko():
     """
-    Valikko tulostaulukon tulostukseen
+    Valikko tulostaulukon voittojen tulostukseen
     """
     tiedosto = False
     tulosdata = {"helppo": [],
