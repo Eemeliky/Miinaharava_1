@@ -13,7 +13,8 @@ import haravasto
 import time
 from datetime import datetime
 
-# Voiton/häviön tapahtuessa lisätään avain "voitto"/"game_over" pelidataan.
+# Voiton tapahtuessa lisätään avain "voitto" pelidataan, jonne tallennetaan voittoaika.
+# Häviön tapahtuessa lisätään avain "game_over" pelidataan, jonne tallennetaan klikatun miinan koordinaatit.
 pelidata = {
     "kentta": [],
     "kansi": [],
@@ -44,7 +45,7 @@ MINMAX = (1, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
 
 def numeroi():
     """
-    Laskee jokaisen ruudun arvon sen vieressä olevien miinojen mukaan.
+    Laskee jokaisen miinoittamattoman ruudun arvon sen vieressä olevien miinojen mukaan.
     """
     kentta = pelidata["kentta"]
     y_raja = len(kentta) - 1
@@ -90,6 +91,7 @@ def numeroi():
 
 def luo_kentta():
     """
+    Poistaa/asettaa pelidata arvot vakioiksi,
     luo kentän ja kannen (kaksiuloitteienen lista, jonka kaikki arvot = 0).
     Lisäksi luo listan, jossa on kaikki kentän ruutujen koordinaatti parit muodossa (x,y).
     """
@@ -234,7 +236,7 @@ def tulvataytto(aloitus_x, aloitus_y):
     y_raja = len(kentta)
     x_raja = len(kentta[0])
 
-    while len(taytto_lista) > 0:
+    while taytto_lista:
         x, y = taytto_lista.pop()
         if kentta[y][x] != -1 and kansi[y][x] == 0:
             kansi[y][x] = 1
@@ -290,8 +292,8 @@ def nayta_miinat():
 
 def voitto_tarkistus():
     """
-    Käy läpi kentän miinat ja kannen, jos avaamattomat ruudut == miinojen lmk
-    ==> lisää voittoajan pelidataan
+    Käy läpi kentän miinat ja kannen, jos avaamattomat ruudut = miinojen lmk.
+    --> lisää voittoajan pelidataan avaimella "voitto"
     """
     avaamattomat = 0
     for y, rivi in enumerate(pelidata["kansi"]):
@@ -307,7 +309,6 @@ def voitto_tarkistus():
                     pelidata["kansi"][y][x] = 9
 
         pelidata["voitto"] = time.time() - pelidata["aloitus_aika"]
-        pelidata["lopputulos"] = "voitto"
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -351,7 +352,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     Tätä funktiota kutsutaan, kun käyttäjä klikkaa sovellusikkunaa hiirellä.
     :param x: Klikkauksen x-koordinaatti peli-ikkunassa
     :param y: Klikkauksen y-koordinaatti peli-ikkunassa
-    :param tapahtuma: hiiren nappi(vasen, oikea vai keski)
+    :param tapahtuma: hiiren nappi(vasen, oikea tai keski)
     :param _: käyttämätön muuttuja, muokkausnäppäimille
     """
     ruutu_x = x // SPRITE_SIVU
@@ -386,7 +387,7 @@ def aseta_vaikeustaso(vaikeustaso):
 
 def tarkista_syote(teksti, rajat):
     """
-    Tarkistaa että käyttäjän antama syote on kelvollinen.
+    Tarkistaa että käyttäjän antama syöte on kelvollinen.
     :param teksti: kysytyn syötteen nimi/teksti
     :param rajat: kokonaisluku pari (min, max)
     :return: Palauttaa kelvollisen syötteen (kokoinaisluku)
@@ -420,7 +421,7 @@ def luo_mukautettu_peli():
 
 def parametrien_syotto():
     """
-    Kysyy käyttältä nimen ja vaikeustason peliin, tarkistaa käyttäjän antamat syötteet.
+    Kysyy käyttältä nimen ja vaikeustason peliin ja tarkistaa käyttäjän antamat syötteet.
     """
     while True:
         nimi = input("Anna pelaaja nimi: ")
@@ -473,8 +474,8 @@ def parametrien_syotto():
 
 def tallenna_tulokset():
     """
-    Tallentaa tulokset, jos peli päättyy voittoon tiedostoon 'tulokset.txt'.
-    Häviöt tallennetaan tiedostoon 'häviöt.txt'. Molemmat ovat muodossa
+    Tallentaa tulokset tiedostoon 'tulokset.txt', jos peli päättyy voittoon.
+    Häviöt tallennetaan tiedostoon 'häviöt.txt'. Molemmissa on tallennus on muodossa
     'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm|vuorot|lopputulos'
     """
     if "voitto" in pelidata:
@@ -532,19 +533,25 @@ def tulosta_taulukko(tulosdata, taso, mukautettu=False):
         for idx in range(0, len(tuloslista)):
             if idx > 10:
                 break
-            pelaaja = tuloslista[idx]
-            aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))  # Maksimi aika tälle formatille on 84399s
-            print(f"{idx + 1}. {pelaaja[1]} - {aika} ({pelaaja[0]})")
-        return
+            p_data = tuloslista[idx]
+            aika_s = float(p_data[2])
+            if aika_s > 84399:  # Maksimi aika valitulle tulostus formatille on 84399s(=23:59:59)
+                aika_s = 84399
+            aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
+            print(f"{idx + 1}. {p_data[1]} - {aika} ({p_data[0]})")
 
-    print(f"__| Voitot ({taso}) |__")
-    tuloslista.reverse()
-    for idx in range(0, len(tuloslista)):
-        if idx > 10:
-            break
-        pelaaja = tuloslista[idx]
-        aika = time.strftime("%H:%M:%S", time.gmtime(float(pelaaja[2])))  # Maksimi aika tälle formatille on 84399s
-        print(f"{idx + 1}. {pelaaja[1]} - {aika} [{pelaaja[3]}x{pelaaja[4]}|{pelaaja[5]}] ({pelaaja[0]})")
+    else:
+        print(f"__| Voitot ({taso}) |__")
+        tuloslista.reverse()
+        for idx in range(0, len(tuloslista)):
+            if idx > 10:
+                break
+            p_data = tuloslista[idx]
+            aika_s = float(p_data[2])
+            if aika_s > 84399:  # Maksimi aika valitulle tulostus formatille on 84399s(=23:59:59)
+                aika_s = 84399
+            aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
+            print(f"{idx + 1}. {p_data[1]} - {aika} [{p_data[3]}x{p_data[4]}|{p_data[5]}] ({p_data[0]})")
 
 
 def tulosvalikko():
@@ -559,7 +566,7 @@ def tulosvalikko():
                  }
 
     try:
-        with open("tulokset.txt") as tulokset:
+        with open("tulokset.txt", "r", encoding="utf-8") as tulokset:
             for tulos in tulokset:
                 pvm, taso, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos = tulos.rstrip().split("|")
                 tulosdata[taso].append([pvm, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos])
@@ -593,7 +600,6 @@ def tulosvalikko():
             else:
                 print("Virheellinen syöte!")
                 print()
-                continue
 
 
 def paavalikko():
