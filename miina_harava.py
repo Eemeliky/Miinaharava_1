@@ -535,8 +535,8 @@ def tulosta_taulukko(tulosdata, taso, mukautettu=False):
                 break
             p_data = tuloslista[idx]
             aika_s = float(p_data[2])
-            if aika_s > 84399:  # Maksimi aika valitulle tulostus formatille on 84399s(=23:59:59)
-                aika_s = 84399
+            if aika_s > 86399:  # Maksimi aika valitulle tulostus formatille on 86399s(=23:59:59)
+                aika_s = 86399
             aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
             print(f"{idx + 1}. {p_data[1]} - {aika} ({p_data[0]})")
 
@@ -548,8 +548,8 @@ def tulosta_taulukko(tulosdata, taso, mukautettu=False):
                 break
             p_data = tuloslista[idx]
             aika_s = float(p_data[2])
-            if aika_s > 84399:  # Maksimi aika valitulle tulostus formatille on 84399s(=23:59:59)
-                aika_s = 84399
+            if aika_s > 86399:  # Maksimi aika valitulle tulostus formatille on 86399s(=23:59:59)
+                aika_s = 86399
             aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
             print(f"{idx + 1}. {p_data[1]} - {aika} [{p_data[3]}x{p_data[4]}|{p_data[5]}] ({p_data[0]})")
 
