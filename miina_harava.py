@@ -573,7 +573,8 @@ def tulosvalikko():
             tiedosto = True
     except OSError:
         print("'tulokset.txt' ei löydy!")
-        print("Voita peli vähintään kerran ja yritä uudestaan")
+        print("Voita peli vähintään kerran ja yritä sitten uudestaan.")
+        input("Paina ENTER palataksesi päävalikkoon...")
 
     if tiedosto:
         while True:
