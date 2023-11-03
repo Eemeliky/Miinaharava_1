@@ -11,16 +11,17 @@ niihin liittyvät statistiikan.
 import random
 import haravasto
 import time
+import json
 from datetime import datetime
 
-# Voiton tapahtuessa lisätään avain "voitto" pelidataan, jonne tallennetaan voittoaika.
-# Häviön tapahtuessa lisätään avain "game_over" pelidataan, jonne tallennetaan klikatun miinan koordinaatit.
 pelidata = {
     "kentta": [],
     "kansi": [],
     "tyhjat": [],
-    "aloitus_aika": 0.0,
+    "aika": 0.0,
     "vuorot": 0,
+    "ruutu": (0, 0),  # Viimeisin klikattu ruutu (x,y)
+    "lopputulos": ""
 }
 
 asetukset = {
@@ -96,10 +97,8 @@ def luo_kentta():
     Lisäksi luo listan, jossa on kaikki kentän ruutujen koordinaatti parit muodossa (x,y).
     """
     pelidata["vuorot"] = 0
-    if "voitto" in pelidata:
-        del pelidata["voitto"]
-    elif "game_over" in pelidata:
-        del pelidata["game_over"]
+    pelidata["lopputulos"] = ""
+    pelidata["ruutu"] = (0, 0)
 
     kentta, kansi, tyhjat_ruudut = ([] for _ in range(3))
 
@@ -214,11 +213,11 @@ def piirra_kentta():
             else:
                 haravasto.lisaa_piirrettava_ruutu(" ", ruutu_x, ruutu_y)
 
-    if "game_over" in pelidata:
+    if pelidata["lopputulos"] == "häviö":
         # tarkistaa, että punainen miina löytyy haravastosta
         if "xr" in haravasto.grafiikka["kuvat"]:
-            ruutu_x = pelidata["game_over"][0] * SPRITE_SIVU
-            ruutu_y = asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (pelidata["game_over"][1] + 1))
+            ruutu_x = pelidata["ruutu"][0] * SPRITE_SIVU
+            ruutu_y = asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (pelidata["ruutu"][1] + 1))
             haravasto.lisaa_piirrettava_ruutu('xr', ruutu_x, ruutu_y)
 
     haravasto.piirra_ruudut()
@@ -286,6 +285,9 @@ def nayta_miinat():
         for x, ruutu in enumerate(rivi):
             if ruutu == -1:
                 pelidata["kansi"][y][x] = 1
+
+    pelidata["aika"] = round(time.time() - pelidata["aika"])
+    pelidata["lopputulos"] = "häviö"
     print("GAME OVER!")
     print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -293,7 +295,7 @@ def nayta_miinat():
 def voitto_tarkistus():
     """
     Käy läpi kentän miinat ja kannen, jos avaamattomat ruudut = miinojen lmk.
-    --> lisää voittoajan pelidataan avaimella "voitto"
+    --> lisää voittoajan pelidataan avaimelle "aika"
     """
     avaamattomat = 0
     for y, rivi in enumerate(pelidata["kansi"]):
@@ -308,7 +310,8 @@ def voitto_tarkistus():
                 if ruutu == 0:
                     pelidata["kansi"][y][x] = 9
 
-        pelidata["voitto"] = time.time() - pelidata["aloitus_aika"]
+        pelidata["aika"] = round(time.time() - pelidata["aika"])
+        pelidata["lopputulos"] = "voitto"
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -332,10 +335,10 @@ def ruudun_avaus(x, y):
     :param x: Klikatun ruudun x-indeksi
     :param y: Klikatun ruudun y-indeksi
     """
+    pelidata["ruutu"] = (x, y)
     if pelidata["kansi"][y][x] != 9:  # Tarkistetaan, että klikattu ruutu ei ole lippu
 
         if pelidata["kentta"][y][x] == -1:  # Jos klikattu ruutu on miina -> Game over
-            pelidata["game_over"] = (x, y)
             nayta_miinat()
 
         else:
@@ -343,7 +346,7 @@ def ruudun_avaus(x, y):
                 turva_alue = luo_turva_alue(x, y)
                 miinoita(turva_alue)
                 numeroi()
-                pelidata["aloitus_aika"] = time.time()
+                pelidata["aika"] = time.time()
             tulvataytto(x, y)
 
 
@@ -361,7 +364,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     if ruutu_x > -1 and ruutu_y > -1:  # Tarkistetaan, että klikkaus on pelikentällä,
         # koska on mahdollista klikata pelikentän ulkopuolelle, mutta sovellusikkunan sisälle
 
-        if "voitto" in pelidata or "game_over" in pelidata:
+        if pelidata["lopputulos"] == "voitto" or pelidata["lopputulos"] == "häviö":
             if tapahtuma == haravasto.HIIRI_VASEN:
                 haravasto.lopeta()
 
@@ -423,14 +426,9 @@ def parametrien_syotto():
     """
     Kysyy käyttältä nimen ja vaikeustason peliin ja tarkistaa käyttäjän antamat syötteet.
     """
-    while True:
-        nimi = input("Anna pelaaja nimi: ")
-        if "|" in nimi:
-            print("'|' ei ole kelvollinen merkki pelaaja nimessä")
-            # rikkoo tulosten tallennuksen, koska tallennus käyttää |-merkkiä jakamaan tulokset
-        else:
-            asetukset["pelaaja_nimi"] = nimi
-            break
+
+    nimi = input("Anna pelaaja nimi: ")
+    asetukset["pelaaja_nimi"] = nimi
 
     print()
     print("|  Vaikeustaso  | Kentän koko |  miinojen määrä |")
@@ -478,36 +476,35 @@ def tallenna_tulokset():
     Häviöt tallennetaan tiedostoon 'häviöt.txt'. Molemmissa on tallennus on muodossa
     'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm|vuorot|lopputulos'
     """
-    if "voitto" in pelidata:
-        paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = round(pelidata["voitto"])
-        with open("tulokset.txt", "a+", encoding="utf-8") as tulokset:
-            tulos_lista = [paiva_aika,
-                           asetukset["vaikeustaso"],
-                           asetukset["pelaaja_nimi"],
-                           str(aika),
-                           str(asetukset["kentan_leveys"]),
-                           str(asetukset["kentan_korkeus"]),
-                           str(asetukset["miinat"]),
-                           str(pelidata["vuorot"]),
-                           "voitto"]
-            tulos_rivi = "|".join(tulos_lista) + "\n"
-            tulokset.write(tulos_rivi)
-    else:
-        paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
-        aika = round(time.time() - pelidata["aloitus_aika"])
-        with open("häviöt.txt", "a+", encoding="utf-8") as haviot:
-            havio_lista = [paiva_aika,
-                           asetukset["vaikeustaso"],
-                           asetukset["pelaaja_nimi"],
-                           str(aika),
-                           str(asetukset["kentan_leveys"]),
-                           str(asetukset["kentan_korkeus"]),
-                           str(asetukset["miinat"]),
-                           str(pelidata["vuorot"]),
-                           "häviö"]
-            havio_rivi = "|".join(havio_lista) + "\n"
-            haviot.write(havio_rivi)
+    paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
+    data = {"tulokset": []}
+    tulos = {"pvm": paiva_aika,
+             "vaikeustaso": asetukset["vaikeustaso"],
+             "nimi": asetukset["pelaaja_nimi"],
+             "aika": pelidata["aika"],
+             "leveys": asetukset["kentan_leveys"],
+             "korkeus": asetukset["kentan_korkeus"],
+             "miinat": asetukset["miinat"],
+             "vuorot": pelidata["vuorot"],
+             "lopputulos": pelidata["lopputulos"]
+             }
+
+    uusi_tiedosto = True
+    try:
+        with open("tulokset.json", "x") as _:
+            data["tulokset"].append(tulos)
+    except OSError:
+        uusi_tiedosto = False
+        print("FILE FOUND")
+
+    with open("tulokset.json", "r+", encoding="utf-8") as tiedosto:
+        if uusi_tiedosto:
+            json.dump(data, tiedosto, ensure_ascii=False)
+        else:
+            tiedosto_data = json.load(tiedosto)
+            tiedosto_data["tulokset"].append(tulos)
+            tiedosto.seek(0)
+            json.dump(tiedosto_data, tiedosto, ensure_ascii=False)
 
 
 def t_sort(data):
