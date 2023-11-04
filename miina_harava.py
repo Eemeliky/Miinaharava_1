@@ -39,8 +39,9 @@ HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
 VAIKEA = [30, 16, 99]
 
+LOPPU = ["häviö", "voitto", "lopetus"]  # Mahdolliset pelin lopputilanteet
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
-MINMAX = (1, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
+MINMAX = (2, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
 # Suositeltu maksimi kentän koko 1920x1080 näytölle on (47,26)
 
 
@@ -92,12 +93,12 @@ def numeroi():
 
 def luo_kentta():
     """
-    Poistaa/asettaa pelidata arvot vakioiksi,
+    Asettaa pelidata arvot vakioiksi,
     luo kentän ja kannen (kaksiuloitteienen lista, jonka kaikki arvot = 0).
     Lisäksi luo listan, jossa on kaikki kentän ruutujen koordinaatti parit muodossa (x,y).
     """
     pelidata["vuorot"] = 0
-    pelidata["lopputulos"] = ""
+    pelidata["lopputulos"] = LOPPU[2]
     pelidata["ruutu"] = (0, 0)
 
     kentta, kansi, tyhjat_ruudut = ([] for _ in range(3))
@@ -118,7 +119,7 @@ def luo_kentta():
 def luo_turva_alue(aloitus_x, aloitus_y):
     """
     Poistaa pelin aloitus ruudun mahdollisista miinoille sallituista paikoista
-    ja Luo 3x3 turva-alueen tämän ympärille, jos mahdollista.
+    ja Luo 3x3 turva-alueen tämän ruudun ympärille, jos mahdollista.
     :param aloitus_x: Pelin aloitus ruudun x koordinaatti
     :param aloitus_y: Pelin aloitus ruudun y koordinaatti
     :return: Listan, joka sisältää koordinaatti parit aloitus ruudun ympärillä olevista ruuduista
@@ -169,7 +170,7 @@ def luo_turva_alue(aloitus_x, aloitus_y):
 
 def miinoita(turva_alue):
     """
-    Asettaa kentälle N kpl miinoja satunnaisiin paikkoihin.
+    Asettaa kentälle asetukset["miinat"] arvon verran miinoja satunnaisiin paikkoihin.
     :param turva_alue: 3x3 alue, jonne miinat asetetaan viimeisenä
     """
     luku = 0
@@ -213,7 +214,7 @@ def piirra_kentta():
             else:
                 haravasto.lisaa_piirrettava_ruutu(" ", ruutu_x, ruutu_y)
 
-    if pelidata["lopputulos"] == "häviö":
+    if pelidata["lopputulos"] == LOPPU[0]:
         # tarkistaa, että punainen miina löytyy haravastosta
         if "xr" in haravasto.grafiikka["kuvat"]:
             ruutu_x = pelidata["ruutu"][0] * SPRITE_SIVU
@@ -279,7 +280,7 @@ def tulvataytto(aloitus_x, aloitus_y):
 
 def nayta_miinat():
     """
-    Käy läpi kentän miinat ja asettaa ne näkyviksi. Kutsutaan vain 'Game over'-tilanteessa.
+    Käy läpi kentän miinat ja asettaa ne näkyviksi. Kutsutaan vain 'häviö'-tilanteessa.
     """
     for y, rivi in enumerate(pelidata["kentta"]):
         for x, ruutu in enumerate(rivi):
@@ -287,7 +288,7 @@ def nayta_miinat():
                 pelidata["kansi"][y][x] = 1
 
     pelidata["aika"] = round(time.time() - pelidata["aika"])
-    pelidata["lopputulos"] = "häviö"
+    pelidata["lopputulos"] = LOPPU[0]
     print("GAME OVER!")
     print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -295,7 +296,7 @@ def nayta_miinat():
 def voitto_tarkistus():
     """
     Käy läpi kentän miinat ja kannen, jos avaamattomat ruudut = miinojen lmk.
-    --> lisää voittoajan pelidataan avaimelle "aika"
+    --> lisää voittoajan pelidataan["aika"]
     """
     avaamattomat = 0
     for y, rivi in enumerate(pelidata["kansi"]):
@@ -311,7 +312,7 @@ def voitto_tarkistus():
                     pelidata["kansi"][y][x] = 9
 
         pelidata["aika"] = round(time.time() - pelidata["aika"])
-        pelidata["lopputulos"] = "voitto"
+        pelidata["lopputulos"] = LOPPU[1]
         print("VOITIT PELIN!!!")
         print("Klikkaa minne tahansa pelikentällä palataksesi päävalikkoon")
 
@@ -364,7 +365,7 @@ def kasittele_hiiri(x, y, tapahtuma, _):
     if ruutu_x > -1 and ruutu_y > -1:  # Tarkistetaan, että klikkaus on pelikentällä,
         # koska on mahdollista klikata pelikentän ulkopuolelle, mutta sovellusikkunan sisälle
 
-        if pelidata["lopputulos"] == "voitto" or pelidata["lopputulos"] == "häviö":
+        if pelidata["lopputulos"] == LOPPU[1] or pelidata["lopputulos"] == LOPPU[0]:
             if tapahtuma == haravasto.HIIRI_VASEN:
                 haravasto.lopeta()
 
@@ -411,7 +412,7 @@ def tarkista_syote(teksti, rajat):
 
 def luo_mukautettu_peli():
     """
-    luo vaikeustaso lista peliin käyttäjän antamien syötteiden mukaan.
+    luo vaikeustasolistan peliin käyttäjän antamien syötteiden mukaan.
     """
     mukautettu = []
     leveys = tarkista_syote("leveys", MINMAX)
@@ -472,9 +473,7 @@ def parametrien_syotto():
 
 def tallenna_tulokset():
     """
-    Tallentaa tulokset tiedostoon 'tulokset.txt', jos peli päättyy voittoon.
-    Häviöt tallennetaan tiedostoon 'häviöt.txt'. Molemmissa on tallennus on muodossa
-    'päivämäärä|vaikeustaso|nimi|aika|kentän leveys|kentän korkeus|miinojen lkm|vuorot|lopputulos'
+    Tallentaa tulokset tiedostoon 'tulokset.json', tiedosto luodaan, jos sitä ei ole olemassa.
     """
     paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
     data = {"tulokset": []}
@@ -495,109 +494,107 @@ def tallenna_tulokset():
             data["tulokset"].append(tulos)
     except OSError:
         uusi_tiedosto = False
-        print("FILE FOUND")
 
     with open("tulokset.json", "r+", encoding="utf-8") as tiedosto:
         if uusi_tiedosto:
-            json.dump(data, tiedosto, ensure_ascii=False)
+            json.dump(data, tiedosto, ensure_ascii=False, indent=4)
         else:
             tiedosto_data = json.load(tiedosto)
             tiedosto_data["tulokset"].append(tulos)
             tiedosto.seek(0)
-            json.dump(tiedosto_data, tiedosto, ensure_ascii=False)
+            json.dump(tiedosto_data, tiedosto, ensure_ascii=False, indent=4)
 
 
 def t_sort(data):
     """
-    Sorttaus-funktio, tulostaulukon järjestämiseen
+    Sorttaus-funktio, top-10 listojen järjestämiseen
     """
-    return float(data[2])
+    return float(data["aika"])
 
 
-def tulosta_taulukko(tulosdata, taso, mukautettu=False):
+def tulosta_taulukko(tulosdata, taso, kaikki=False):
     """
     Tulostaa halutun tulostaulukon TOP-10 järjestykseen(ei koske mukauttettua)
     :param tulosdata: dict, vaikeustasot avaimina
     :param taso: str, vaikeustaso
-    :param mukautettu: lippu mukautetun pelin tuloksille
+    :param kaikki: lippu kaikkien pelin tuloksien tulostukseen
     """
     print()
-    tuloslista = tulosdata[taso]
 
-    if not mukautettu:
+    if not kaikki:
+        tuloslista = []
+        for rivi in tulosdata:
+            if rivi["lopputulos"] != LOPPU[0] and rivi["vaikeustaso"] == taso:
+                tuloslista.append(rivi)
         tuloslista.sort(key=t_sort)
-        print(f"__| TOP-10 ({taso}) |__")
-        for idx in range(0, len(tuloslista)):
-            if idx > 10:
+
+        print(f"| TOP-10 ({taso}) |")
+        for num, tulos in enumerate(tuloslista):
+            if num > 10:
                 break
-            p_data = tuloslista[idx]
-            aika_s = float(p_data[2])
+            aika_s = float(tulos["aika"])
             if aika_s > 86399:  # Maksimi aika valitulle tulostus formatille on 86399s(=23:59:59)
                 aika_s = 86399
             aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
-            print(f"{idx + 1}. {p_data[1]} - {aika} ({p_data[0]})")
+            print(f"{num + 1}. {tulos['nimi']} - {aika} ({tulos['pvm']})")
 
     else:
-        print(f"__| Voitot ({taso}) |__")
-        tuloslista.reverse()
-        for idx in range(0, len(tuloslista)):
-            if idx > 10:
-                break
-            p_data = tuloslista[idx]
-            aika_s = float(p_data[2])
+        print(f"| tulokset.json |")
+        for tulos in tulosdata:
+            aika_s = float(tulos["aika"])
             if aika_s > 86399:  # Maksimi aika valitulle tulostus formatille on 86399s(=23:59:59)
                 aika_s = 86399
             aika = time.strftime("%H:%M:%S", time.gmtime(aika_s))
-            print(f"{idx + 1}. {p_data[1]} - {aika} [{p_data[3]}x{p_data[4]}|{p_data[5]}] ({p_data[0]})")
+            print(f"({tulos['pvm']}) {tulos['nimi']} - {aika}, "
+                  f"[{tulos['leveys']}x{tulos['korkeus']}:{tulos['miinat']}], "
+                  f"vuorot:{tulos['vuorot']}, {tulos['lopputulos']}")
 
 
 def tulosvalikko():
     """
-    Valikko tulostaulukon voittojen tulostukseen
+    Valikko tallennettujen tulosten tulostukseen.
     """
     tiedosto = False
-    tulosdata = {"helppo": [],
-                 "normaali": [],
-                 "vaikea": [],
-                 "mukautettu": []
-                 }
 
     try:
-        with open("tulokset.txt", "r", encoding="utf-8") as tulokset:
-            for tulos in tulokset:
-                pvm, taso, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos = tulos.rstrip().split("|")
-                tulosdata[taso].append([pvm, nimi, aika, leveys, korkeus, miinat, vuorot, l_tulos])
+        with open("tulokset.json", "r", encoding="utf-8") as tiedosto:
+            tiedosto_data = json.load(tiedosto)
             tiedosto = True
     except OSError:
-        print("'tulokset.txt' ei löydy!")
-        print("Voita peli vähintään kerran ja yritä sitten uudestaan.")
+        print("'tulokset.json' ei löydy!")
+        print("Pelaa vähintään 1 peli ja yritä sitten uudestaan.")
         input("Paina ENTER palataksesi päävalikkoon...")
 
     if tiedosto:
         while True:
             print()
-            print("Anna vaikeustaso, jonka tulostaulukon haluat tulostettavaksi tai palaa päävalikkoon")
-            print("Valinnat: helppo(h), normaali(n), vaikea(v), mukautettu(m), palaa päävalikkoon(b)")
+            print("| Tulosvalikko |")
+            print("  - Tulosta kaikki(k)")
+            print("  - Palaa päävalikkoon(b)")
+            print("  | Top-10 list |")
+            print("    - Helppo(h)")
+            print("    - Normaali(n)")
+            print("    - Vaikea(v)")
+
             valinta = input("Anna valinta: ").lower()
 
             if valinta == "b" or valinta == "palaa päävalikkoon":
                 break
 
             elif valinta == "h" or valinta == "helppo":
-                tulosta_taulukko(tulosdata, "helppo")
+                tulosta_taulukko(tiedosto_data["tulokset"], "helppo")
 
             elif valinta == "n" or valinta == "normaali":
-                tulosta_taulukko(tulosdata, "normaali")
+                tulosta_taulukko(tiedosto_data["tulokset"], "normaali")
 
             elif valinta == "v" or valinta == "vaikea":
-                tulosta_taulukko(tulosdata, "vaikea")
+                tulosta_taulukko(tiedosto_data["tulokset"], "vaikea")
 
-            elif valinta == "m" or valinta == "mukautettu":
-                tulosta_taulukko(tulosdata, "mukautettu", True)
+            elif valinta == "k" or valinta == "tulosta kaikki":
+                tulosta_taulukko(tiedosto_data["tulokset"], "-", True)
 
             else:
                 print("Virheellinen syöte!")
-                print()
 
 
 def paavalikko():
@@ -610,10 +607,10 @@ def paavalikko():
     print("")
 
     while True:
-        print("_| Päävalikko |_")
-        print("- Uusi peli (u)")
-        print("- Tulostaulukko (t)")
-        print("- Lopeta (q)")
+        print("| Päävalikko |")
+        print("  - Uusi peli(u)")
+        print("  - Tulostaulukko(t)")
+        print("  - Lopeta(q)")
         valinta = input("Anna valinta: ").lower()
 
         if valinta == "q" or valinta == "lopeta":
@@ -631,6 +628,8 @@ def paavalikko():
             tallenna_tulokset()
 
         elif valinta == "t" or valinta == "tulostaulukko":
+            for _ in range(10):
+                print()
             tulosvalikko()
 
         else:
