@@ -48,7 +48,7 @@ MIINA = -1
 LOPPU = ["häviö", "voitto", "lopetus"]  # Mahdolliset pelin lopputilanteet
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
 MINMAX = (2, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
-# Suositeltu maksimi kentän koko 1920x1080 näytölle on (47,26)
+# Suositeltu maksimi kentän koko 1920x1080 näytölle on 47x26 ruutua
 
 
 def numeroi():
@@ -307,7 +307,7 @@ def voitto_tarkistus():
     avaamattomat = 0
     for y, rivi in enumerate(pelidata["kansi"]):
         for x, ruutu in enumerate(rivi):
-            if ruutu == AVATTU or ruutu == LIPPU:
+            if ruutu == AVAAMATON or ruutu == LIPPU:
                 avaamattomat += 1
 
     if avaamattomat == asetukset["miinat"]:
