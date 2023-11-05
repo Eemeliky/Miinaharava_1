@@ -39,6 +39,12 @@ HELPPO = [9, 9, 10]
 NORMAALI = [16, 16, 40]
 VAIKEA = [30, 16, 99]
 
+# Ruutujen arvoja kentällä/kannella
+AVATTU = 1
+AVAAMATON = 0
+LIPPU = 9
+MIINA = -1
+
 LOPPU = ["häviö", "voitto", "lopetus"]  # Mahdolliset pelin lopputilanteet
 SPRITE_SIVU = 40  # Vakio spriten koko (40x40)px
 MINMAX = (2, 101)  # Pelikentän (minimi, maksimi) koko raja-arvot
@@ -55,39 +61,39 @@ def numeroi():
 
     for y in range(y_raja + 1):
         for x in range(x_raja + 1):
-            if kentta[y][x] == -1:
+            if kentta[y][x] == MIINA:
                 continue
 
             # ylös
-            if y > 0 and kentta[y - 1][x] == -1:
+            if y > 0 and kentta[y - 1][x] == MIINA:
                 kentta[y][x] += 1
 
             # alas
-            if y < y_raja and kentta[y + 1][x] == -1:
+            if y < y_raja and kentta[y + 1][x] == MIINA:
                 kentta[y][x] += 1
 
             # vasen
-            if x > 0 and kentta[y][x - 1] == -1:
+            if x > 0 and kentta[y][x - 1] == MIINA:
                 kentta[y][x] += 1
 
             # oikea
-            if x < x_raja and kentta[y][x + 1] == -1:
+            if x < x_raja and kentta[y][x + 1] == MIINA:
                 kentta[y][x] += 1
 
             # vasen ylä
-            if y > 0 and x > 0 and kentta[y - 1][x - 1] == -1:
+            if y > 0 and x > 0 and kentta[y - 1][x - 1] == MIINA:
                 kentta[y][x] += 1
 
             # oikea ylä
-            if y > 0 and x < x_raja and kentta[y - 1][x + 1] == -1:
+            if y > 0 and x < x_raja and kentta[y - 1][x + 1] == MIINA:
                 kentta[y][x] += 1
 
             # vasen ala
-            if y < y_raja and x > 0 and kentta[y + 1][x - 1] == -1:
+            if y < y_raja and x > 0 and kentta[y + 1][x - 1] == MIINA:
                 kentta[y][x] += 1
 
             # oikea ala
-            if y < y_raja and x < x_raja and kentta[y + 1][x + 1] == -1:
+            if y < y_raja and x < x_raja and kentta[y + 1][x + 1] == MIINA:
                 kentta[y][x] += 1
 
 
@@ -178,11 +184,11 @@ def miinoita(turva_alue):
     while luku < asetukset["miinat"]:
         if not pelidata["tyhjat"]:
             x, y = turva_alue.pop()
-            pelidata["kentta"][y][x] = -1
+            pelidata["kentta"][y][x] = MIINA
         else:
             idx = random.randint(0, len(pelidata["tyhjat"]) - 1)
             x, y = pelidata["tyhjat"].pop(idx)
-            pelidata["kentta"][y][x] = -1
+            pelidata["kentta"][y][x] = MIINA
         luku += 1
 
     pelidata["tyhjat"] = []
@@ -203,11 +209,11 @@ def piirra_kentta():
             ruutu_x = x * SPRITE_SIVU
             ruutu_y = asetukset["ikkunan_korkeus"] - (SPRITE_SIVU * (y + 1))
 
-            if pelidata['kansi'][y][x] == 9:
+            if pelidata['kansi'][y][x] == LIPPU:
                 haravasto.lisaa_piirrettava_ruutu('f', ruutu_x, ruutu_y)
 
             elif pelidata['kansi'][y][x] == 1:
-                if asia == -1:
+                if asia == MIINA:
                     haravasto.lisaa_piirrettava_ruutu('x', ruutu_x, ruutu_y)
                 else:
                     haravasto.lisaa_piirrettava_ruutu(str(asia), ruutu_x, ruutu_y)
@@ -238,40 +244,40 @@ def tulvataytto(aloitus_x, aloitus_y):
 
     while taytto_lista:
         x, y = taytto_lista.pop()
-        if kentta[y][x] != -1 and kansi[y][x] == 0:
+        if kentta[y][x] != MIINA and kansi[y][x] == AVAAMATON:
             kansi[y][x] = 1
             if not kentta[y][x] > 0:
 
                 # alas
-                if y > 0 and kansi[y - 1][x] == 0:
+                if y > 0 and kansi[y - 1][x] == AVAAMATON:
                     taytto_lista.append((x, y - 1))
 
                 # ylös
-                if y < y_raja - 1 and kansi[y + 1][x] == 0:
+                if y < y_raja - 1 and kansi[y + 1][x] == AVAAMATON:
                     taytto_lista.append((x, y + 1))
 
                 # vasen
-                if x > 0 and kansi[y][x - 1] == 0:
+                if x > 0 and kansi[y][x - 1] == AVAAMATON:
                     taytto_lista.append((x - 1, y))
 
                 # oikea
-                if x < x_raja - 1 and kansi[y][x + 1] == 0:
+                if x < x_raja - 1 and kansi[y][x + 1] == AVAAMATON:
                     taytto_lista.append((x + 1, y))
 
                 # vasen ala
-                if y > 0 and x > 0 and kansi[y - 1][x - 1] == 0:
+                if y > 0 and x > 0 and kansi[y - 1][x - 1] == AVAAMATON:
                     taytto_lista.append((x - 1, y - 1))
 
                 # oikea ala
-                if y > 0 and x < x_raja - 1 and kansi[y - 1][x + 1] == 0:
+                if y > 0 and x < x_raja - 1 and kansi[y - 1][x + 1] == AVAAMATON:
                     taytto_lista.append((x + 1, y - 1))
 
                 # vasen ylä
-                if y < y_raja - 1 and x > 0 and kansi[y + 1][x - 1] == 0:
+                if y < y_raja - 1 and x > 0 and kansi[y + 1][x - 1] == AVAAMATON:
                     taytto_lista.append((x - 1, y + 1))
 
                 # oikea ylä
-                if y < y_raja - 1 and x < x_raja - 1 and kansi[y + 1][x + 1] == 0:
+                if y < y_raja - 1 and x < x_raja - 1 and kansi[y + 1][x + 1] == AVAAMATON:
                     taytto_lista.append((x + 1, y + 1))
 
     pelidata["vuorot"] += 1
@@ -284,8 +290,8 @@ def nayta_miinat():
     """
     for y, rivi in enumerate(pelidata["kentta"]):
         for x, ruutu in enumerate(rivi):
-            if ruutu == -1:
-                pelidata["kansi"][y][x] = 1
+            if ruutu == MIINA:
+                pelidata["kansi"][y][x] = AVATTU
 
     pelidata["aika"] = round(time.time() - pelidata["aika"])
     pelidata["lopputulos"] = LOPPU[0]
@@ -301,15 +307,15 @@ def voitto_tarkistus():
     avaamattomat = 0
     for y, rivi in enumerate(pelidata["kansi"]):
         for x, ruutu in enumerate(rivi):
-            if ruutu == 0 or ruutu == 9:
+            if ruutu == AVATTU or ruutu == LIPPU:
                 avaamattomat += 1
 
     if avaamattomat == asetukset["miinat"]:
         #  Muuttaa kentällä olevat avaamattomat ruudut lipuiksi
         for y, rivi in enumerate(pelidata["kansi"]):
             for x, ruutu in enumerate(rivi):
-                if ruutu == 0:
-                    pelidata["kansi"][y][x] = 9
+                if ruutu == AVAAMATON:
+                    pelidata["kansi"][y][x] = LIPPU
 
         pelidata["aika"] = round(time.time() - pelidata["aika"])
         pelidata["lopputulos"] = LOPPU[1]
@@ -323,11 +329,11 @@ def liputus(x, y):
     :param x: Klikatun ruudun x-indeksi
     :param y: Klikatun ruudun y-indeksi
     """
-    if pelidata["kansi"][y][x] == 0:
-        pelidata["kansi"][y][x] = 9
+    if pelidata["kansi"][y][x] == AVAAMATON:
+        pelidata["kansi"][y][x] = LIPPU
 
-    elif pelidata["kansi"][y][x] == 9:
-        pelidata["kansi"][y][x] = 0
+    elif pelidata["kansi"][y][x] == LIPPU:
+        pelidata["kansi"][y][x] = AVAAMATON
 
 
 def ruudun_avaus(x, y):
@@ -337,9 +343,9 @@ def ruudun_avaus(x, y):
     :param y: Klikatun ruudun y-indeksi
     """
     pelidata["ruutu"] = (x, y)
-    if pelidata["kansi"][y][x] != 9:  # Tarkistetaan, että klikattu ruutu ei ole lippu
+    if pelidata["kansi"][y][x] != LIPPU:  # Tarkistetaan, että klikattu ruutu ei ole lippu
 
-        if pelidata["kentta"][y][x] == -1:  # Jos klikattu ruutu on miina -> Game over
+        if pelidata["kentta"][y][x] == MIINA:  # Jos klikattu ruutu on miina -> Game over
             nayta_miinat()
 
         else:
@@ -475,6 +481,9 @@ def tallenna_tulokset():
     """
     Tallentaa tulokset tiedostoon 'tulokset.json', tiedosto luodaan, jos sitä ei ole olemassa.
     """
+    if pelidata["lopputulos"] == LOPPU[2]:
+        pelidata["aika"] = round(time.time() - pelidata["aika"])
+
     paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
     data = {"tulokset": []}
     tulos = {"pvm": paiva_aika,
@@ -524,7 +533,7 @@ def tulosta_taulukko(tulosdata, taso, kaikki=False):
     if not kaikki:
         tuloslista = []
         for rivi in tulosdata:
-            if rivi["lopputulos"] != LOPPU[0] and rivi["vaikeustaso"] == taso:
+            if rivi["lopputulos"] == LOPPU[1] and rivi["vaikeustaso"] == taso:
                 tuloslista.append(rivi)
         tuloslista.sort(key=t_sort)
 
