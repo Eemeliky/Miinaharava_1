@@ -59,8 +59,8 @@ def numeroi():
     y_raja = len(kentta) - 1
     x_raja = len(kentta[0]) - 1
 
-    for y in range(y_raja + 1):
-        for x in range(x_raja + 1):
+    for y in range(len(kentta)):
+        for x in range(len(kentta[0])):
             if kentta[y][x] == MIINA:
                 continue
 
@@ -212,7 +212,7 @@ def piirra_kentta():
             if pelidata['kansi'][y][x] == LIPPU:
                 haravasto.lisaa_piirrettava_ruutu('f', ruutu_x, ruutu_y)
 
-            elif pelidata['kansi'][y][x] == 1:
+            elif pelidata['kansi'][y][x] == AVATTU:
                 if asia == MIINA:
                     haravasto.lisaa_piirrettava_ruutu('x', ruutu_x, ruutu_y)
                 else:
@@ -482,7 +482,10 @@ def tallenna_tulokset():
     Tallentaa tulokset tiedostoon 'tulokset.json', tiedosto luodaan, jos sitä ei ole olemassa.
     """
     if pelidata["lopputulos"] == LOPPU[2]:
-        pelidata["aika"] = round(time.time() - pelidata["aika"])
+        if pelidata["vuorot"] > 0:
+            pelidata["aika"] = round(time.time() - pelidata["aika"])
+        else:
+            pelidata["aika"] = 0
 
     paiva_aika = datetime.now().strftime("%d/%m/%Y %H:%M")
     data = {"tulokset": []}
