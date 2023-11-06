@@ -125,7 +125,7 @@ def luo_kentta():
 def luo_turva_alue(aloitus_x, aloitus_y):
     """
     Poistaa pelin aloitus ruudun mahdollisista miinoille sallituista paikoista
-    ja Luo 3x3 turva-alueen tämän ruudun ympärille, jos mahdollista.
+    ja luo 3x3 turva-alueen tämän ruudun ympärille, jos mahdollista.
     :param aloitus_x: Pelin aloitus ruudun x koordinaatti
     :param aloitus_y: Pelin aloitus ruudun y koordinaatti
     :return: Listan, joka sisältää koordinaatti parit aloitus ruudun ympärillä olevista ruuduista
@@ -197,7 +197,7 @@ def miinoita(turva_alue):
 def piirra_kentta():
     """
     Käsittelijäfunktio, joka piirtää kaksiulotteisena listana kuvatun miinakentän
-    ruudut näkyviin peli-ikkunaan. Funktiota kutsutaan aina kun pelimoottori pyytää
+    ruudut näkyviin peli-ikkunaan. Funktiota kutsutaan aina, kun pelimoottori pyytää
     ruudun näkymän päivitystä.
     """
     haravasto.tyhjaa_ikkuna()
@@ -325,7 +325,7 @@ def voitto_tarkistus():
 
 def liputus(x, y):
     """
-    Lisää ruutun lipun tai poistaa olemassa olevan lipun
+    Lisää ruutuun lipun tai poistaa olemassa olevan lipun
     :param x: Klikatun ruudun x-indeksi
     :param y: Klikatun ruudun y-indeksi
     """
@@ -418,7 +418,7 @@ def tarkista_syote(teksti, rajat):
 
 def luo_mukautettu_peli():
     """
-    luo vaikeustasolistan peliin käyttäjän antamien syötteiden mukaan.
+    Luo vaikeustasolistan käyttäjän antamien syötteiden mukaan.
     """
     mukautettu = []
     leveys = tarkista_syote("leveys", MINMAX)
@@ -433,7 +433,6 @@ def parametrien_syotto():
     """
     Kysyy käyttältä nimen ja vaikeustason peliin ja tarkistaa käyttäjän antamat syötteet.
     """
-
     nimi = input("Anna pelaaja nimi: ")
     asetukset["pelaaja_nimi"] = nimi
 
@@ -526,8 +525,8 @@ def t_sort(data):
 
 def tulosta_taulukko(tulosdata, taso, kaikki=False):
     """
-    Tulostaa halutun tulostaulukon TOP-10 järjestykseen(ei koske mukauttettua)
-    :param tulosdata: dict, vaikeustasot avaimina
+    Tulostaa halutun Top-10 listan tai kaikki mahdolliset tulokset tiedostosta 'tulokset.json'.
+    :param tulosdata: dict, tulokset listassa
     :param taso: str, vaikeustaso
     :param kaikki: lippu kaikkien pelin tuloksien tulostukseen
     """
